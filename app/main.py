@@ -1,5 +1,5 @@
 """Ponto de entrada do app desktop: ``python -m app.main``."""
-"TESTE 123"
+
 from __future__ import annotations
 
 import sys
