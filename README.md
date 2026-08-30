@@ -112,7 +112,6 @@ suposição de design deliberada — se for preferível bater 1:1 com os rótulo
 do bloco do AutoCAD, os rótulos podem ser trocados em um único lugar:
 `app/domain/drawing.py`.
 
-## Publicação no git
+# Pendencias:
 
-Este repositório ainda não foi inicializado como repositório git — a
-publicação fica a critério do usuário.
+1. Ajustar Imagem.
