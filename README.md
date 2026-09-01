@@ -111,7 +111,3 @@ termos usados no memorial de cálculo e no restante da norma. Essa é uma
 suposição de design deliberada — se for preferível bater 1:1 com os rótulos
 do bloco do AutoCAD, os rótulos podem ser trocados em um único lugar:
 `app/domain/drawing.py`.
-
-# Pendencias:
-
-1. Ajustar Imagem.
