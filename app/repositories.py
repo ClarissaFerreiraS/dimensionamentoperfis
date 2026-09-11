@@ -78,8 +78,10 @@ class SteelTypeRepository:
         self._conn = conn
 
     def list_all(self) -> list[SteelType]:
+        # Sem ORDER BY designacao (alfabetico): preserva a ordem de insercao
+        # (rowid), que segue o agrupamento por familia da planilha original.
         rows = self._conn.execute(
-            "SELECT designacao, fy_mpa, fu_mpa FROM steel_types ORDER BY designacao"
+            "SELECT designacao, fy_mpa, fu_mpa FROM steel_types ORDER BY rowid"
         ).fetchall()
         return [SteelType(designacao=r["designacao"], fy_mpa=r["fy_mpa"], fu_mpa=r["fu_mpa"]) for r in rows]
 
@@ -196,6 +198,7 @@ class ProfileRepository:
                 "ry_cm": profile.ry_cm,
                 "j_cm4": profile.j_cm4,
                 "cw_cm5": profile.cw_cm6,
+                "ec_mm": profile.ec_mm,
                 **{k: v for k, v in extra.items() if k in _SOLDADOS_COLUMNS},
             }
             columns = list(values.keys())
@@ -265,6 +268,7 @@ class ProfileRepository:
             ry_cm=row["ry_cm"],
             j_cm4=row["j_cm4"],
             cw_cm6=row["cw_cm5"],
+            ec_mm=row["ec_mm"] or 0.0,
         )
 
 

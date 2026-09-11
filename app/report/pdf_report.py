@@ -94,6 +94,28 @@ def _draw_section_scene(pdf: FPDF, scene: SectionScene, x0: float, y0: float, ma
     for dim in scene.dimensions:
         _draw_dimension(pdf, dim, to_page, scale)
 
+    for circle in scene.circles:
+        cx_page, cy_page = to_page(circle.center)
+        radius_page = circle.radius * scale
+        if circle.dashed:
+            pdf.set_dash_pattern(dash=1, gap=0.8)
+        pdf.ellipse(cx_page - radius_page, cy_page - radius_page, 2 * radius_page, 2 * radius_page, style="D")
+        if circle.dashed:
+            pdf.set_dash_pattern()
+
+    pdf.set_font("Helvetica", "", 7)
+    for axis in scene.axes:
+        p1 = to_page(axis.p1)
+        p2 = to_page(axis.p2)
+        pdf.set_dash_pattern(dash=2.2, gap=1)
+        pdf.line(p1[0], p1[1], p2[0], p2[1])
+        pdf.set_dash_pattern()
+        text_w = pdf.get_string_width(axis.label) + 1
+        pdf.set_xy(p1[0] - text_w - 1, p1[1] - 2.25)
+        pdf.cell(text_w, 4.5, axis.label, align="C")
+        pdf.set_xy(p2[0] + 1, p2[1] - 2.25)
+        pdf.cell(text_w, 4.5, axis.label, align="C")
+
 
 def _draw_dimension(pdf: FPDF, dim: Dimension, to_page, scale: float) -> None:
     if dim.horizontal:
@@ -114,17 +136,18 @@ def _draw_dimension(pdf: FPDF, dim: Dimension, to_page, scale: float) -> None:
     # Linha de cota.
     pdf.line(p1_line[0], p1_line[1], p2_line[0], p2_line[1])
 
-    mid_x = (p1_line[0] + p2_line[0]) / 2
-    mid_y = (p1_line[1] + p2_line[1]) / 2
+    t = dim.label_t
+    anchor_x = p1_line[0] + (p2_line[0] - p1_line[0]) * t
+    anchor_y = p1_line[1] + (p2_line[1] - p1_line[1]) * t
     text_w = pdf.get_string_width(dim.label) + 1
     if dim.horizontal:
-        pdf.set_xy(mid_x - text_w / 2, mid_y - 4.5)
+        pdf.set_xy(anchor_x - text_w / 2, anchor_y - 4.5)
     else:
-        pdf.set_xy(mid_x + 1, mid_y - 2)
+        pdf.set_xy(anchor_x + 1, anchor_y - 2)
     pdf.cell(text_w, 4, dim.label, align="C")
 
 
-def _add_geometria(pdf: FPDF, profile: Profile) -> None:
+def _add_geometria(pdf: FPDF, profile: Profile, r: DesignResult) -> None:
     _add_secao(pdf, "GEOMETRIA DA SECAO TRANSVERSAL")
     y_tabela = pdf.get_y()
 
@@ -140,7 +163,7 @@ def _add_geometria(pdf: FPDF, profile: Profile) -> None:
         ("tf", f"{profile.tf_mm:.1f} mm", "Inercia em Y (Iy)", f"{profile.iy_cm4:.2f} cm4"),
         ("h", f"{profile.h_mm:.1f} mm", "Raio de Giracao (rx)", f"{profile.rx_cm:.2f} cm"),
         ("d", f"{profile.d_mm:.1f} mm", "Raio de Giracao (ry)", f"{profile.ry_cm:.2f} cm"),
-        ("d'", f"{profile.d_linha_mm:.1f} mm", "-", "-"),
+        ("d'", f"{profile.d_linha_mm:.1f} mm", "Raio de Giracao Polar (r0)", f"{r.r0_cm:.2f} cm"),
     ]
     pdf.set_font("Helvetica", "", 8)
     for dim_nome, dim_valor, prop_nome, prop_valor in linhas:
@@ -150,8 +173,8 @@ def _add_geometria(pdf: FPDF, profile: Profile) -> None:
         pdf.cell(27, 6, prop_valor, border=1, ln=1, align="C")
 
     scene = build_section_scene(profile)
-    _draw_section_scene(pdf, scene, x0=140, y0=y_tabela, max_w=55, max_h=48)
-    pdf.set_y(max(pdf.get_y(), y_tabela + 48))
+    _draw_section_scene(pdf, scene, x0=145, y0=y_tabela, max_w=55, max_h=55)
+    pdf.set_y(max(pdf.get_y(), y_tabela + 55))
     pdf.ln(4)
 
 
@@ -253,7 +276,7 @@ def gerar_memorial_pdf(
         ln=1,
     )
 
-    _add_geometria(pdf, profile)
+    _add_geometria(pdf, profile, result)
     _add_estabilidade_global(pdf, result)
     _add_limite_esbeltez(pdf, result)
     _add_flambagem_local(pdf, profile, result)

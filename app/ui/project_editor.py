@@ -286,12 +286,10 @@ class ProjectEditor(QWidget):
         texto = (
             f"<b>Perfil:</b> {profile.bitola} ({profile.family.value}) — <b>Aço:</b> {steel.designacao}<br>"
             f"<b>Nc,Rd</b> = {r.nc_rd_kn:.2f} kN &nbsp;&nbsp; <b>Nc,Sd</b> = {r.ncsd_kn:.2f} kN<br>"
-            f"Taxa de utilização: {r.taxa_utilizacao * 100:.1f}%<br>"
             f"Esbeltez máxima: {r.esbeltez_max:.2f} (limite {r.limite_esbeltez:.0f})<br>"
             f"χ = {r.chi:.4f} &nbsp;&nbsp; λ0 = {r.lambda0:.4f}<br>"
             f"Flambagem local — mesa: {'sim' if r.ocorre_flamb_mesa else 'não'}, "
             f"alma: {'sim' if r.ocorre_flamb_alma else 'não'}<br>"
-            f"Aef = {r.aef_cm2:.2f} cm²<br>"
             f"<span style='color:{cor}; font-size: 14pt;'><b>VEREDITO: {veredito}</b></span>"
         )
         self.resultado_label.setText(texto)

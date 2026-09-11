@@ -47,6 +47,9 @@ class Profile:
     ry_cm: float
     j_cm4: float
     cw_cm6: float
+    ec_mm: float = 0.0
+    """Dimensão do detalhe de solda mesa/alma (só para perfis soldados; 0 para
+    laminados, que não têm esse detalhe — ver rótulo 'ec' no desenho cotado)."""
 
     @property
     def raio_concordancia_mm(self) -> float:

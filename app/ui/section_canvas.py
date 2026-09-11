@@ -65,6 +65,34 @@ class SectionCanvas(QWidget):
         for dim in scene.dimensions:
             self._draw_dimension(painter, dim, to_widget)
 
+        pen_circle_solido = QPen(Qt.darkGray, 0.8)
+        pen_circle_tracejado = QPen(Qt.darkGray, 0.8, Qt.DashLine)
+        for circle in scene.circles:
+            painter.setPen(pen_circle_tracejado if circle.dashed else pen_circle_solido)
+            center = to_widget(circle.center)
+            radius_px = circle.radius * scale
+            painter.drawEllipse(center, radius_px, radius_px)
+
+        pen_axis = QPen(Qt.darkGray, 0.8, Qt.DashDotLine)
+        painter.setPen(pen_axis)
+        for axis in scene.axes:
+            p1 = to_widget(axis.p1)
+            p2 = to_widget(axis.p2)
+            painter.drawLine(p1, p2)
+            fm = painter.fontMetrics()
+            text_w = fm.horizontalAdvance(axis.label)
+            text_h = fm.height()
+            painter.drawText(
+                QRectF(p1.x() - text_w - 4, p1.y() - text_h / 2, text_w, text_h),
+                Qt.AlignCenter,
+                axis.label,
+            )
+            painter.drawText(
+                QRectF(p2.x() + 4, p2.y() - text_h / 2, text_w, text_h),
+                Qt.AlignCenter,
+                axis.label,
+            )
+
         painter.end()
 
     @staticmethod
@@ -85,12 +113,16 @@ class SectionCanvas(QWidget):
         painter.drawLine(p2_ref, p2_line)
         painter.drawLine(p1_line, p2_line)
 
-        mid = QPointF((p1_line.x() + p2_line.x()) / 2, (p1_line.y() + p2_line.y()) / 2)
+        t = dim.label_t
+        anchor = QPointF(
+            p1_line.x() + (p2_line.x() - p1_line.x()) * t,
+            p1_line.y() + (p2_line.y() - p1_line.y()) * t,
+        )
         fm = painter.fontMetrics()
         text_w = fm.horizontalAdvance(dim.label)
         text_h = fm.height()
         if dim.horizontal:
-            rect = QRectF(mid.x() - text_w / 2 - 2, mid.y() - text_h - 2, text_w + 4, text_h)
+            rect = QRectF(anchor.x() - text_w / 2 - 2, anchor.y() - text_h - 2, text_w + 4, text_h)
         else:
-            rect = QRectF(mid.x() + 3, mid.y() - text_h / 2, text_w + 4, text_h)
+            rect = QRectF(anchor.x() + 3, anchor.y() - text_h / 2, text_w + 4, text_h)
         painter.drawText(rect, Qt.AlignCenter, dim.label)
