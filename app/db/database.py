@@ -9,10 +9,22 @@ existentes.
 from __future__ import annotations
 
 import sqlite3
+import sys
 from pathlib import Path
 
-SCHEMA_PATH = Path(__file__).with_name("schema.sql")
-DEFAULT_DB_PATH = Path(__file__).resolve().parents[2] / "catalogo.db"
+if getattr(sys, "frozen", False):
+    # Empacotado com PyInstaller: os módulos Python não existem como arquivos
+    # soltos, então `schema.sql` (dado empacotado via --add-data) fica em
+    # `sys._MEIPASS`, e o banco deve morar ao lado do .exe real para persistir
+    # entre execuções (não em uma pasta temporária de extração).
+    _RESOURCE_DIR = Path(getattr(sys, "_MEIPASS")) / "app" / "db"
+    _BASE_DIR = Path(sys.executable).resolve().parent
+else:
+    _RESOURCE_DIR = Path(__file__).resolve().parent
+    _BASE_DIR = Path(__file__).resolve().parents[2]
+
+SCHEMA_PATH = _RESOURCE_DIR / "schema.sql"
+DEFAULT_DB_PATH = _BASE_DIR / "catalogo.db"
 
 
 def get_connection(db_path: str | Path = DEFAULT_DB_PATH) -> sqlite3.Connection:
