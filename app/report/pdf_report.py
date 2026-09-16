@@ -248,20 +248,20 @@ def _add_estabilidade_global(pdf: FPDF, r: DesignResult) -> None:
     _add_linha(pdf, f"Carga Critica Flexao (Ney): {r.ney_kn:.2f} kN")
     _add_linha(pdf, f"Carga Critica Torcao (Nez): {r.nez_kn:.2f} kN")
     _add_linha(pdf, f"Carga Critica Minima (Ne_min): {r.ne_min_kn:.2f} kN")
-    _add_linha(pdf, f"Indice de esbeltez (λ0): {r.lambda0:.3f}")
+    _add_linha(pdf, f"Indice de esbeltez (lambda_0): {r.lambda0:.3f}")
     _add_linha(pdf, f"Fator de reducao (X): {r.chi:.4f}")
 
 
 def _add_limite_esbeltez(pdf: FPDF, r: DesignResult) -> None:
     _add_secao(pdf, "2. VERIFICACAO DO LIMITE DE ESBELTEZ")
-    _add_linha(pdf, f"Esbeltez em X (λx) = {r.esbeltez_x:.2f}")
-    _add_linha(pdf, f"Esbeltez em Y (λy) = {r.esbeltez_y:.2f}")
-    _add_linha(pdf, f"Esbeltez Maxima (λmax) = {r.esbeltez_max:.2f}")
+    _add_linha(pdf, f"Esbeltez em X (lambda_x) = {r.esbeltez_x:.2f}")
+    _add_linha(pdf, f"Esbeltez em Y (lambda_y) = {r.esbeltez_y:.2f}")
+    _add_linha(pdf, f"Esbeltez Maxima (lambda_max) = {r.esbeltez_max:.2f}")
     _add_linha(pdf, f"Limite de esbeltez = {r.limite_esbeltez:.2f}")
     if r.atende_esbeltez:
-        _add_linha(pdf, "-> STATUS: ATENDE AO LIMITE DE ESBELTEZ (λmax <= 200)")
+        _add_linha(pdf, "-> STATUS: ATENDE AO LIMITE DE ESBELTEZ (lambda_max <= 200)")
     else:
-        _add_linha(pdf, "-> STATUS: NAO ATENDE AO LIMITE DE ESBELTEZ (λmax > 200)")
+        _add_linha(pdf, "-> STATUS: NAO ATENDE AO LIMITE DE ESBELTEZ (lambda_max > 200)")
 
 
 def _add_flambagem_local(pdf: FPDF, profile: Profile, r: DesignResult) -> None:
@@ -273,7 +273,7 @@ def _add_flambagem_local(pdf: FPDF, profile: Profile, r: DesignResult) -> None:
     pdf.set_font("Helvetica", "", 9)
     pdf.cell(0, 5, f"b/t (bf/2.tf) = {r.bt_mesa:.2f}", ln=1)
     pdf.cell(0, 5, f"(b/t)lim = {r.limite_norma_mesa:.2f}", ln=1)
-    pdf.cell(0, 5, f"(b/t)lim / √(X) = {r.limite_efetivo_mesa:.2f}", ln=1)
+    pdf.cell(0, 5, f"(b/t)lim / raiz(X) = {r.limite_efetivo_mesa:.2f}", ln=1)
     if r.ocorre_flamb_mesa:
         pdf.cell(0, 5, "-> STATUS: OCORRE flambagem local na mesa.", ln=1)
     else:
@@ -287,7 +287,7 @@ def _add_flambagem_local(pdf: FPDF, profile: Profile, r: DesignResult) -> None:
     rel_alma = "d'/tw" if is_laminado else "h/tw"
     pdf.cell(0, 5, f"b/t ({rel_alma}) = {r.bt_alma:.2f}", ln=1)
     pdf.cell(0, 5, f"(b/t)lim = {r.limite_norma_alma:.2f}", ln=1)
-    pdf.cell(0, 5, f"(b/t)lim / √(X) = {r.limite_efetivo_alma:.2f}", ln=1)
+    pdf.cell(0, 5, f"(b/t)lim / raiz(X) = {r.limite_efetivo_alma:.2f}", ln=1)
     if r.ocorre_flamb_alma:
         pdf.cell(0, 5, "-> STATUS: OCORRE flambagem local na alma.", ln=1)
     else:
