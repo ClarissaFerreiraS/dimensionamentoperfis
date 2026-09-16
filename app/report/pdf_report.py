@@ -29,6 +29,30 @@ from app.domain.models import DesignResult, LoadCase, Profile, ProfileFamily, St
 _NORMA_BASE = "ABNT NBR 8800:2024"
 _AUTOR_PADRAO = "Engenheiro(a) Responsavel"
 
+# Fontes core do fpdf2 (Helvetica/Times/Courier) só codificam latin-1. Texto
+# livre digitado pelo usuário (campo "Autor") pode conter pontuação "smart"
+# do autocorretor do Windows/Word (traço-en/em, aspas curvas, reticências) ou
+# outros caracteres fora desse conjunto, o que fazia `pdf.cell` levantar
+# `FPDFUnicodeEncodingException` e o botão "Gerar PDF" falhar com esse erro.
+_SUBSTITUICOES_LATIN1 = {
+    "–": "-",  # en dash
+    "—": "-",  # em dash
+    "‘": "'",
+    "’": "'",
+    "“": '"',
+    "”": '"',
+    "…": "...",
+    " ": " ",  # espaço não separável
+}
+
+
+def _sanitizar_latin1(texto: str) -> str:
+    """Normaliza ``texto`` para o conjunto latin-1 aceito pelas fontes core do PDF."""
+
+    for original, substituto in _SUBSTITUICOES_LATIN1.items():
+        texto = texto.replace(original, substituto)
+    return texto.encode("latin-1", errors="replace").decode("latin-1")
+
 
 class _RelatorioPDF(FPDF):
     """Página do memorial: cabeçalho com autor/norma, rodapé com nº de página."""
@@ -303,7 +327,8 @@ def gerar_memorial_pdf(
     ``CodigocomPDF.py``, com ``/`` trocado por ``_`` na bitola).
     """
 
-    pdf = _RelatorioPDF(autor=autor.strip() if autor and autor.strip() else _AUTOR_PADRAO)
+    autor_sanitizado = _sanitizar_latin1(autor.strip()) if autor and autor.strip() else _AUTOR_PADRAO
+    pdf = _RelatorioPDF(autor=autor_sanitizado)
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
 
