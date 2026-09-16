@@ -480,6 +480,8 @@ try:
 
     pdf.ln(2)
 
+
+
     pdf.set_font('Arial', 'B', 9)
     pdf.cell(0, 5, "Alma (elemento AA)", ln=1)
     pdf.set_font('Arial', '', 9)
