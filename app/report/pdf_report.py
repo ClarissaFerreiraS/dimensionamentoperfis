@@ -18,6 +18,7 @@ convenção de nome de arquivo ``Memorial_Compressao_<bitola>.pdf``, mas:
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 
 from fpdf import FPDF
@@ -65,6 +66,48 @@ def _add_linha(pdf: FPDF, texto: str) -> None:
     pdf.cell(0, 5, texto, ln=1)
 
 
+def _draw_dashed_line(pdf: FPDF, x1: float, y1: float, x2: float, y2: float, dash: float, gap: float) -> None:
+    """Traço tracejado manual (independe de ``FPDF.set_dash_pattern``)."""
+
+    length = math.hypot(x2 - x1, y2 - y1)
+    if length <= 0:
+        return
+    ux = (x2 - x1) / length
+    uy = (y2 - y1) / length
+    period = dash + gap
+    pos = 0.0
+    while pos < length:
+        fim = min(pos + dash, length)
+        pdf.line(x1 + ux * pos, y1 + uy * pos, x1 + ux * fim, y1 + uy * fim)
+        pos += period
+
+
+def _draw_dashed_circle(pdf: FPDF, cx: float, cy: float, radius: float, dash: float, gap: float) -> None:
+    """Círculo tracejado manual, aproximado por cordas curtas."""
+
+    if radius <= 0:
+        return
+    dash_ang = dash / radius
+    gap_ang = gap / radius
+    period_ang = dash_ang + gap_ang
+    if period_ang <= 0:
+        return
+    two_pi = 2 * math.pi
+    ang = 0.0
+    while ang < two_pi:
+        fim = min(ang + dash_ang, two_pi)
+        n = max(int((fim - ang) / 0.2), 1)
+        prev_x = cx + radius * math.cos(ang)
+        prev_y = cy + radius * math.sin(ang)
+        for i in range(1, n + 1):
+            a = ang + (fim - ang) * i / n
+            x = cx + radius * math.cos(a)
+            y = cy + radius * math.sin(a)
+            pdf.line(prev_x, prev_y, x, y)
+            prev_x, prev_y = x, y
+        ang += period_ang
+
+
 def _draw_section_scene(pdf: FPDF, scene: SectionScene, x0: float, y0: float, max_w: float, max_h: float) -> None:
     """Desenha ``scene`` (mm, origem no centro, +y para cima) na página do PDF.
 
@@ -98,18 +141,15 @@ def _draw_section_scene(pdf: FPDF, scene: SectionScene, x0: float, y0: float, ma
         cx_page, cy_page = to_page(circle.center)
         radius_page = circle.radius * scale
         if circle.dashed:
-            pdf.set_dash_pattern(dash=1, gap=0.8)
-        pdf.ellipse(cx_page - radius_page, cy_page - radius_page, 2 * radius_page, 2 * radius_page, style="D")
-        if circle.dashed:
-            pdf.set_dash_pattern()
+            _draw_dashed_circle(pdf, cx_page, cy_page, radius_page, dash=1, gap=0.8)
+        else:
+            pdf.ellipse(cx_page - radius_page, cy_page - radius_page, 2 * radius_page, 2 * radius_page, style="D")
 
     pdf.set_font("Helvetica", "", 7)
     for axis in scene.axes:
         p1 = to_page(axis.p1)
         p2 = to_page(axis.p2)
-        pdf.set_dash_pattern(dash=2.2, gap=1)
-        pdf.line(p1[0], p1[1], p2[0], p2[1])
-        pdf.set_dash_pattern()
+        _draw_dashed_line(pdf, p1[0], p1[1], p2[0], p2[1], dash=2.2, gap=1)
         text_w = pdf.get_string_width(axis.label) + 1
         pdf.set_xy(p1[0] - text_w - 1, p1[1] - 2.25)
         pdf.cell(text_w, 4.5, axis.label, align="C")
