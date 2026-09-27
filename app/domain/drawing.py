@@ -59,6 +59,11 @@ class Dimension:
     concentrá-los todos na mesma posição — evita que, em escalas pequenas
     (ex.: caixa de desenho fixa do PDF), os textos se sobreponham mesmo que
     as linhas de cota estejam em offsets distintos.
+
+    O sinal de ``offset`` define de que lado da peça a cota fica, e os
+    renderizadores põem o rótulo do lado de fora: ``offset < 0`` coloca uma
+    cota vertical à esquerda (rótulo à esquerda da linha) e uma horizontal
+    abaixo (rótulo abaixo da linha).
     """
 
     p1: tuple[float, float]
@@ -171,45 +176,47 @@ def build_section_scene(profile: Profile) -> SectionScene:
             label=f"bf = {bf:g} mm",
             horizontal=True,
         ),
-        # Altura total (d) — cota vertical à direita da seção. label_t=0.85
-        # (em vez do padrão 0.5) para afastar o rótulo do centro: como "d",
-        # "h" e "d'"/"y" são linhas quase do mesmo comprimento, empilhadas
-        # lado a lado, seus pontos médios coincidem em ~y=0 — em escalas
-        # pequenas (perfil grande na caixa fixa do PDF) isso faz os rótulos
-        # se sobreporem mesmo com offsets horizontais distintos.
+        # As cotas são distribuídas ao redor da seção (bf em cima, tw embaixo,
+        # d/tf à esquerda, h/d'/y à direita) em vez de empilhadas de um lado
+        # só, para que os rótulos não disputem o mesmo espaço.
+        #
+        # Altura total (d) — cota vertical à esquerda da seção.
         Dimension(
-            p1=(half_bf, half_d),
-            p2=(half_bf, -half_d),
-            offset=margin_bf,
+            p1=(-half_bf, half_d),
+            p2=(-half_bf, -half_d),
+            offset=-margin_bf,
             label=f"d = {d:g} mm",
             horizontal=False,
-            label_t=0.85,
         ),
-        # Espessura da mesa (tf) — cota vertical curta, canto superior direito.
+        # Espessura da mesa (tf) — cota vertical curta, canto superior esquerdo.
         Dimension(
-            p1=(half_bf, half_d),
-            p2=(half_bf, y_mesa_interna),
-            offset=margin_bf * 0.5,
+            p1=(-half_bf, half_d),
+            p2=(-half_bf, y_mesa_interna),
+            offset=-margin_bf * 0.5,
             label=f"tf = {tf:g} mm",
             horizontal=False,
         ),
-        # Espessura da alma (tw) — cota horizontal curta, logo abaixo da mesa superior.
+        # Espessura da alma (tw) — cota horizontal curta, abaixo da seção: as
+        # linhas de extensão descem da alma, atravessando a mesa inferior.
         Dimension(
-            p1=(-half_tw, y_mesa_interna),
-            p2=(half_tw, y_mesa_interna),
-            offset=margin_d * 0.6,
+            p1=(-half_tw, -y_mesa_interna),
+            p2=(half_tw, -y_mesa_interna),
+            offset=-(tf + margin_d * 0.6),
             label=f"tw = {tw:g} mm",
             horizontal=True,
         ),
         # Altura útil da alma (h) — cota vertical, entre as faces internas das
         # mesas. Existe para as duas famílias (para soldados, h = d').
+        # Com raio (laminados), label_t=0.15 afasta o rótulo do de "d'", linha
+        # paralela empilhada no mesmo lado. Sem raio (soldados), o topo desse
+        # lado é ocupado pelo círculo de zoom da solda, então o rótulo desce.
         Dimension(
             p1=(half_bf, y_mesa_interna),
             p2=(half_bf, -y_mesa_interna),
             offset=margin_bf * 0.8,
             label=f"h = {profile.h_mm:g} mm",
             horizontal=False,
-            label_t=0.15,
+            label_t=0.15 if r > 0 else 0.8,
         ),
     )
 
@@ -228,8 +235,8 @@ def build_section_scene(profile: Profile) -> SectionScene:
             ),
             # Cota vertical (não horizontal): o vão livre entre o fim do
             # raio de concordância (half_tw + r) e a borda da mesa (half_bf)
-            # não tem nenhuma outra cota nele — todas as demais (tf, h, d,
-            # d') ficam à direita de half_bf. Colocando a linha de cota do
+            # não tem nenhuma outra cota nele — as de h e d' ficam à direita
+            # de half_bf. Colocando a linha de cota do
             # "r" no meio desse vão, o rótulo fica em espaço livre, sem
             # disputar posição com a alma (à esquerda) nem com a pilha de
             # cotas verticais (à direita). Uma cota horizontal aqui não
@@ -250,19 +257,18 @@ def build_section_scene(profile: Profile) -> SectionScene:
 
     if profile.family == ProfileFamily.SOLDADO:
         # y — distância do centro (eixo X-X) até a face externa da mesa
-        # (y = d/2), cota típica de perfis soldados.
-        # label_t baixo: ancora o rótulo perto da base da linha de cota
-        # (perto de y=0), longe do círculo de zoom do detalhe de solda
-        # (ec), que fica na metade superior da mesa — no meio (padrão
-        # 0.5) o rótulo caía dentro/junto do círculo de zoom.
+        # (y = d/2), cota típica de perfis soldados. Fica à esquerda, entre
+        # "tf" e "d", porque o lado direito já tem "h" e o círculo de zoom
+        # do detalhe de solda (ec). label_t=0.6 mantém o rótulo acima do de
+        # "d" (no meio da altura) e abaixo do de "tf" (no topo).
         dimensions = dimensions + (
             Dimension(
-                p1=(half_bf, 0.0),
-                p2=(half_bf, half_d),
-                offset=margin_bf * 0.65,
+                p1=(-half_bf, 0.0),
+                p2=(-half_bf, half_d),
+                offset=-margin_bf * 0.65,
                 label=f"y = {half_d:g} mm",
                 horizontal=False,
-                label_t=0.12,
+                label_t=0.6,
             ),
         )
 
@@ -275,12 +281,11 @@ def build_section_scene(profile: Profile) -> SectionScene:
             small_r = menor_lado * 0.035
             zoom_r = menor_lado * 0.16
             corner = (half_tw, y_mesa_interna)
-            # Multiplicador maior (1.35 -> 1.75): mais folga horizontal entre
-            # a linha de cota "y" (em half_bf + margin_bf*0.65) e a borda
-            # esquerda do círculo de zoom — o texto do rótulo tem tamanho
-            # fixo em mm de página (não encolhe com a escala de ajuste à
-            # caixa do PDF), então uma folga geométrica pequena ainda causa
-            # sobreposição visual dos rótulos "y" e "ec".
+            # Multiplicador 1.75: folga horizontal entre a linha de cota "h"
+            # (em half_bf + margin_bf*0.8) e a borda esquerda do círculo de
+            # zoom — o texto do rótulo tem tamanho fixo em mm de página (não
+            # encolhe com a escala de ajuste à caixa do PDF), então uma folga
+            # geométrica pequena ainda causa sobreposição visual.
             zoom_center = (half_bf + margin_bf * 1.75, y_mesa_interna * 0.4)
 
             dx = zoom_center[0] - corner[0]

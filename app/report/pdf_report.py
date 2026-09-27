@@ -204,10 +204,11 @@ def _draw_dimension(pdf: FPDF, dim: Dimension, to_page, scale: float) -> None:
     anchor_x = p1_line[0] + (p2_line[0] - p1_line[0]) * t
     anchor_y = p1_line[1] + (p2_line[1] - p1_line[1]) * t
     text_w = pdf.get_string_width(dim.label) + 1
+    # Rótulo do lado de fora da peça: offset negativo = abaixo / à esquerda.
     if dim.horizontal:
-        pdf.set_xy(anchor_x - text_w / 2, anchor_y - 4.5)
+        pdf.set_xy(anchor_x - text_w / 2, anchor_y + 0.5 if dim.offset < 0 else anchor_y - 4.5)
     else:
-        pdf.set_xy(anchor_x + 1, anchor_y - 2)
+        pdf.set_xy(anchor_x - text_w - 1.5 if dim.offset < 0 else anchor_x + 1, anchor_y - 2)
     pdf.cell(text_w, 4, dim.label, align="C")
 
 
@@ -216,7 +217,7 @@ def _add_geometria(pdf: FPDF, profile: Profile, r: DesignResult) -> None:
     y_tabela = pdf.get_y()
 
     pdf.set_font("Helvetica", "B", 8)
-    pdf.cell(42, 6, "Dimensões", border=1, align="C")
+    pdf.cell(22, 6, "Dimensões", border=1, align="C")
     pdf.cell(20, 6, "Valores", border=1, align="C")
     pdf.cell(45, 6, "Propriedades", border=1, align="C")
     pdf.cell(27, 6, "Valores", border=1, ln=1, align="C")
@@ -231,14 +232,17 @@ def _add_geometria(pdf: FPDF, profile: Profile, r: DesignResult) -> None:
     ]
     pdf.set_font("Helvetica", "", 8)
     for dim_nome, dim_valor, prop_nome, prop_valor in linhas:
-        pdf.cell(42, 6, dim_nome, border=1)
+        pdf.cell(22, 6, dim_nome, border=1)
         pdf.cell(20, 6, dim_valor, border=1, align="C")
         pdf.cell(45, 6, prop_nome, border=1)
         pdf.cell(27, 6, prop_valor, border=1, ln=1, align="C")
 
+    # A tabela termina em x≈124 mm; a caixa do desenho fica centrada no
+    # espaço restante com folga dos dois lados, porque as cotas têm rótulos
+    # à esquerda (d, tf, y) e à direita (h, d') da seção.
     scene = build_section_scene(profile)
-    _draw_section_scene(pdf, scene, x0=145, y0=y_tabela, max_w=55, max_h=55)
-    pdf.set_y(max(pdf.get_y(), y_tabela + 55))
+    _draw_section_scene(pdf, scene, x0=137, y0=y_tabela + 4, max_w=50, max_h=50)
+    pdf.set_y(max(pdf.get_y(), y_tabela + 58))
     pdf.ln(4)
 
 

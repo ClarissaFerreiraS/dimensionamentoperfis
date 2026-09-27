@@ -8,10 +8,12 @@ from PySide6.QtWidgets import QApplication
 
 from app.db.database import DEFAULT_DB_PATH, open_database
 from app.ui.main_window import MainWindow
+from app.ui.theme import apply_theme
 
 
 def main() -> int:
     app = QApplication(sys.argv)
+    apply_theme(app)
 
     conn = open_database(DEFAULT_DB_PATH)
     window = MainWindow(conn, DEFAULT_DB_PATH)
