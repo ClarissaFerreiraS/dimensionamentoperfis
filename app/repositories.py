@@ -298,7 +298,6 @@ class ProjectRepository:
         bitola: str,
         steel_designacao: str,
         loads: LoadCase,
-        observacoes: str | None = None,
     ) -> int:
         now = _now_iso()
         cursor = self._conn.execute(
@@ -306,11 +305,11 @@ class ProjectRepository:
             INSERT INTO projects (
                 nome, autor, criado_em, atualizado_em, family, bitola,
                 steel_designacao, ea_gpa, ga_gpa, ncsd_kn,
-                kx, lx_m, ky, ly_m, kz, lz_m, observacoes
+                kx, lx_m, ky, ly_m, kz, lz_m
             ) VALUES (
                 :nome, :autor, :criado_em, :atualizado_em, :family, :bitola,
                 :steel_designacao, :ea_gpa, :ga_gpa, :ncsd_kn,
-                :kx, :lx_m, :ky, :ly_m, :kz, :lz_m, :observacoes
+                :kx, :lx_m, :ky, :ly_m, :kz, :lz_m
             )
             """,
             {
@@ -330,7 +329,6 @@ class ProjectRepository:
                 "ly_m": loads.ly_m,
                 "kz": loads.kz,
                 "lz_m": loads.lz_m,
-                "observacoes": observacoes,
             },
         )
         self._conn.commit()
@@ -345,7 +343,6 @@ class ProjectRepository:
         bitola: str,
         steel_designacao: str,
         loads: LoadCase,
-        observacoes: str | None = None,
     ) -> None:
         self._conn.execute(
             """
@@ -353,8 +350,7 @@ class ProjectRepository:
                 nome = :nome, autor = :autor, atualizado_em = :atualizado_em,
                 family = :family, bitola = :bitola, steel_designacao = :steel_designacao,
                 ea_gpa = :ea_gpa, ga_gpa = :ga_gpa, ncsd_kn = :ncsd_kn,
-                kx = :kx, lx_m = :lx_m, ky = :ky, ly_m = :ly_m, kz = :kz, lz_m = :lz_m,
-                observacoes = :observacoes
+                kx = :kx, lx_m = :lx_m, ky = :ky, ly_m = :ly_m, kz = :kz, lz_m = :lz_m
             WHERE id = :id
             """,
             {
@@ -374,7 +370,6 @@ class ProjectRepository:
                 "ly_m": loads.ly_m,
                 "kz": loads.kz,
                 "lz_m": loads.lz_m,
-                "observacoes": observacoes,
             },
         )
         self._conn.commit()

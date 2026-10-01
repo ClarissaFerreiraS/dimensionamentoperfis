@@ -89,6 +89,7 @@ def calcular_pilar(profile: Profile, steel: SteelType, loads: LoadCase) -> Desig
     limite_efetivo_alma = limite_norma_alma / (chi**0.5)
 
     # Mesa
+    sigma_el_mesa = 0.0
     if bt_mesa > limite_efetivo_mesa:
         ocorre_flamb_mesa = True
         sigma_el_mesa = ((c2_m * limite_norma_mesa) / bt_mesa) ** 2 * fy
@@ -99,6 +100,7 @@ def calcular_pilar(profile: Profile, steel: SteelType, loads: LoadCase) -> Desig
         bef_mesa = b_mesa
 
     # Alma
+    sigma_el_alma = 0.0
     if bt_alma > limite_efetivo_alma:
         ocorre_flamb_alma = True
         sigma_el_alma = ((c2_a * limite_norma_alma) / bt_alma) ** 2 * fy
@@ -135,11 +137,19 @@ def calcular_pilar(profile: Profile, steel: SteelType, loads: LoadCase) -> Desig
         limite_norma_mesa=limite_norma_mesa,
         limite_efetivo_mesa=limite_efetivo_mesa,
         ocorre_flamb_mesa=ocorre_flamb_mesa,
+        b_mesa_mm=b_mesa,
+        c1_mesa=c1_m,
+        c2_mesa=c2_m,
+        sigma_el_mesa_mpa=sigma_el_mesa,
         bef_mesa_mm=bef_mesa,
         bt_alma=bt_alma,
         limite_norma_alma=limite_norma_alma,
         limite_efetivo_alma=limite_efetivo_alma,
         ocorre_flamb_alma=ocorre_flamb_alma,
+        b_alma_mm=altura_ref_alma,
+        c1_alma=c1_a,
+        c2_alma=c2_a,
+        sigma_el_alma_mpa=sigma_el_alma,
         bef_alma_mm=bef_alma,
         perda_mesas_cm2=perda_mesas / 100,
         perda_alma_cm2=perda_alma / 100,

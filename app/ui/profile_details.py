@@ -27,8 +27,7 @@ class ProfileDetailsTab(QWidget):
         self._subtitulo = QLabel()
         self._subtitulo.setObjectName("muted")
 
-        self._canvas = SectionCanvas()
-        self._canvas.setMinimumSize(360, 360)
+        self._canvas = SectionCanvas(max_scale=2.1, fixed_size=False, target_height_px=500)
         desenho_box = QGroupBox("Seção transversal")
         desenho_layout = QVBoxLayout(desenho_box)
         desenho_layout.addWidget(self._canvas)

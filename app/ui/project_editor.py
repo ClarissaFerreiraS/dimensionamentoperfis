@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import sqlite3
 import html
+import re
 from pathlib import Path
 
 from PySide6.QtCore import Qt, Signal
@@ -24,10 +25,8 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QMessageBox,
-    QPlainTextEdit,
-    QProgressBar,
     QPushButton,
-    QScrollArea,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -41,6 +40,20 @@ from app.ui.section_canvas import SectionCanvas
 
 _MSG_INICIAL = "Preencha os dados e clique em <b>CALCULAR</b>."
 _MSG_ALTERADO = "Dados alterados — clique em <b>CALCULAR</b> para atualizar o resultado."
+
+
+def _chave_bitola(bitola: str) -> tuple[str, tuple[tuple[int, float | str], ...]]:
+    """Ordena bitolas por família textual e dimensões numéricas."""
+    partes: list[tuple[int, float | str]] = []
+    for parte in re.split(r"(\d+(?:[.,]\d+)?)", bitola):
+        if not parte:
+            continue
+        if re.fullmatch(r"\d+(?:[.,]\d+)?", parte):
+            partes.append((0, float(parte.replace(",", "."))))
+        else:
+            partes.append((1, parte.lower()))
+    familia = bitola.split(maxsplit=1)[0].lower()
+    return familia, tuple(partes)
 
 
 def _spinbox(minimum: float, maximum: float, decimals: int, valor: float, sufixo: str = "") -> QDoubleSpinBox:
@@ -149,7 +162,12 @@ class ProjectEditor(QWidget):
         form.addRow("Família:", self.familia_combo)
         form.addRow("Bitola:", self.bitola_combo)
 
-        self.canvas = SectionCanvas()
+        self.canvas = SectionCanvas(
+            max_scale=1.05,
+            fixed_size=False,
+            vertical_shift=0,
+            target_height_px=260,
+        )
 
         btn_detalhes = QPushButton("Ver detalhes do perfil  ›")
         btn_detalhes.setObjectName("link")
@@ -219,11 +237,7 @@ class ProjectEditor(QWidget):
 
         grid.addWidget(_label("r₀:"), 3, 5, Qt.AlignRight)
         grid.addWidget(self.r0_label, 3, 6, Qt.AlignRight)
-        grid.setColumnStretch(0, 1)
-
-        self.observacoes_edit = QPlainTextEdit()
-        self.observacoes_edit.setPlaceholderText("Observações (opcional)")
-        self.observacoes_edit.setMaximumHeight(52)
+        grid.setColumnMinimumWidth(0, 52)
 
         btn_calcular = QPushButton("CALCULAR")
         btn_calcular.setObjectName("primary")
@@ -237,7 +251,6 @@ class ProjectEditor(QWidget):
         layout.setSpacing(10)
         layout.addWidget(header)
         layout.addLayout(grid)
-        layout.addWidget(self.observacoes_edit)
         layout.addWidget(btn_calcular)
 
         for spin in (
@@ -251,32 +264,10 @@ class ProjectEditor(QWidget):
         self.resultado_label = QLabel(_MSG_INICIAL)
         self.resultado_label.setWordWrap(True)
         self.resultado_label.setTextFormat(Qt.RichText)
+        self.resultado_label.setMinimumWidth(0)
+        self.resultado_label.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Expanding)
         self.resultado_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
         self.resultado_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        # A tabela do resultado é bem mais alta que a mensagem inicial: a
-        # rolagem impede que ela aumente o tamanho mínimo da janela.
-        resultado_rolagem = QScrollArea()
-        resultado_rolagem.setWidgetResizable(True)
-        resultado_rolagem.setFrameShape(QScrollArea.NoFrame)
-        resultado_rolagem.setWidget(self.resultado_label)
-
-        # Barra e veredito aparecem só após calcular; reservam o espaço mesmo
-        # ocultos para que a janela não mude de tamanho ao exibi-los.
-        self.utilizacao_bar = QProgressBar()
-        self.utilizacao_bar.setRange(0, 100)
-        self.veredito_label = QLabel()
-        # Quebra "RESULTADO: REPROVADO" em duas linhas se faltar largura, em
-        # vez de alargar a janela.
-        self.veredito_label.setWordWrap(True)
-        self.veredito_label.setText(
-            "<span style='font-size: 22pt; font-weight: 800;'>RESULTADO: REPROVADO</span>"
-        )
-        for widget in (self.utilizacao_bar, self.veredito_label):
-            politica = widget.sizePolicy()
-            politica.setRetainSizeWhenHidden(True)
-            widget.setSizePolicy(politica)
-            widget.hide()
-
         btn_pdf = QPushButton("GERAR MEMORIAL PDF")
         btn_pdf.setObjectName("success")
         btn_pdf.setCursor(Qt.PointingHandCursor)
@@ -287,9 +278,9 @@ class ProjectEditor(QWidget):
 
         box = QGroupBox("Resultado")
         layout = QVBoxLayout(box)
-        layout.addWidget(resultado_rolagem, 1)
-        layout.addWidget(self.utilizacao_bar)
-        layout.addWidget(self.veredito_label)
+        layout.setSpacing(4)
+        layout.addWidget(self.resultado_label, 1)
+        layout.addSpacing(6)
         layout.addLayout(rodape)
         return box
 
@@ -309,7 +300,8 @@ class ProjectEditor(QWidget):
         family = self.familia_combo.currentData()
         self.bitola_combo.blockSignals(True)
         self.bitola_combo.clear()
-        for profile in self._profile_repo.list_all(family):
+        profiles = sorted(self._profile_repo.list_all(family), key=lambda profile: _chave_bitola(profile.bitola))
+        for profile in profiles:
             self.bitola_combo.addItem(profile.bitola, profile.bitola)
         self.bitola_combo.blockSignals(False)
         if bitola_selecionada is not None:
@@ -353,8 +345,6 @@ class ProjectEditor(QWidget):
         self.ncrd_label.setText("—")
         self.r0_label.setText("—")
         self.resultado_label.setText(mensagem)
-        self.utilizacao_bar.hide()
-        self.veredito_label.hide()
 
     @property
     def profile(self) -> Profile | None:
@@ -393,7 +383,6 @@ class ProjectEditor(QWidget):
         self._current_result = None
         self.nome_edit.setText("")
         self.autor_edit.setText("")
-        self.observacoes_edit.setPlainText("")
         self.familia_combo.setCurrentIndex(0)
         self.ncsd_spin.setValue(0.0)
         for spin, valor in (
@@ -421,7 +410,6 @@ class ProjectEditor(QWidget):
         self._current_project_id = project_id
         self.nome_edit.setText(row["nome"])
         self.autor_edit.setText(row["autor"] or "")
-        self.observacoes_edit.setPlainText(row["observacoes"] or "")
 
         family = ProfileFamily(row["family"])
         idx = self.familia_combo.findData(family)
@@ -460,41 +448,39 @@ class ProjectEditor(QWidget):
         return True
 
     def _atualizar_resultado(self, profile: Profile, steel: SteelType, r: DesignResult) -> None:
-        def sim_nao(valor: bool) -> str:
-            return "sim" if valor else "não"
-
         muted = theme.TEXT_MUTED
+        cor_verificacao = theme.SUCCESS if r.aprovado else theme.DANGER
+        estado_verificacao = "ATENDE AO DIMENSIONAMENTO" if r.aprovado else "NÃO ATENDE AO DIMENSIONAMENTO"
+        resistencia_ok = r.nc_rd_kn >= r.ncsd_kn
         self.resultado_label.setText(
-            "<table cellspacing='0' cellpadding='3' style='font-size: 11pt;'>"
-            f"<tr><td style='color:{muted}'>Perfil</td>"
-            f"<td><b>{html.escape(profile.bitola)}</b> ({profile.family.value})</td></tr>"
-            f"<tr><td style='color:{muted}'>Aço</td><td><b>{html.escape(steel.designacao)}</b></td></tr>"
-            f"<tr><td style='color:{muted}'>Nc,Rd / Nc,Sd</td>"
-            f"<td><b>{r.nc_rd_kn:.2f} kN</b> / <b>{r.ncsd_kn:.2f} kN</b></td></tr>"
-            f"<tr><td style='color:{muted}'>Esbeltez máxima</td>"
-            f"<td>{r.esbeltez_max:.2f} (limite {r.limite_esbeltez:.0f})</td></tr>"
-            f"<tr><td style='color:{muted}'>χ &nbsp;/&nbsp; λ₀</td><td>{r.chi:.4f} &nbsp;/&nbsp; {r.lambda0:.4f}</td></tr>"
-            f"<tr><td style='color:{muted}'>Flambagem local&nbsp;&nbsp;</td>"
-            f"<td>mesa: {sim_nao(r.ocorre_flamb_mesa)}, alma: {sim_nao(r.ocorre_flamb_alma)}</td></tr>"
-            "</table>"
+            "<div style='font-size: 11pt;'>"
+            "<table cellspacing='0' cellpadding='2'>"
+            f"<tr><td width='60' style='color:{muted}; padding-right: 4px;'>Perfil</td><td style='white-space: nowrap;'><b>{html.escape(profile.bitola)}</b> ({profile.family.value})</td></tr>"
+            f"<tr><td width='60' style='color:{muted}; padding-right: 4px;'>Aço</td><td style='white-space: nowrap;'><b>{html.escape(steel.designacao)}</b></td></tr>"
+            "</table><br>"
+            f"<div style='color:{muted}; padding-top: 12px;'>Cargas críticas de instabilidade</div>"
+            "<table width='100%' cellspacing='0' cellpadding='2'>"
+            f"<tr><td width='115' style='color:{muted};'>Nex (flexão X)</td><td><b>{r.nex_kn:.2f}&nbsp;kN</b></td>"
+            f"<td width='115' style='color:{muted};'>Ney (flexão Y)</td><td><b>{r.ney_kn:.2f}&nbsp;kN</b></td></tr>"
+            f"<tr><td width='115' style='color:{muted};'>Nez (torção)</td><td><b>{r.nez_kn:.2f}&nbsp;kN</b></td>"
+            f"<td width='115' style='color:{muted};'>Ne,min</td><td><b>{r.ne_min_kn:.2f}&nbsp;kN</b></td></tr>"
+            "</table><br>"
+            f"<div style='color:{muted}; padding-top: 16px; font-weight: 600;'>Índice de esbeltez e fator de redução</div>"
+            f"<table cellspacing='0' cellpadding='2'><tr><td width='60' style='color:{muted}; padding-right: 4px;'>χ &nbsp;/&nbsp; λ₀</td><td>{r.chi:.4f} &nbsp;/&nbsp; {r.lambda0:.4f}</td></tr></table><br>"
+            f"<div style='color:{muted}; padding-top: 16px; font-weight: 600;'>Flambagem local</div>"
+            f"<table cellspacing='0' cellpadding='2'><tr><td width='60' style='color:{muted}; padding-right: 4px;'>Mesa</td><td>{'Ocorre flambagem' if r.ocorre_flamb_mesa else 'Não ocorre flambagem'}</td></tr>"
+            f"<tr><td width='60' style='color:{muted}; padding-right: 4px;'>Alma</td><td>{'Ocorre flambagem' if r.ocorre_flamb_alma else 'Não ocorre flambagem'}</td></tr></table><br>"
+            f"<div style='color:{muted}; padding-top: 16px; font-weight: 600;'>Resistência à compressão</div>"
+            "<table cellspacing='0' cellpadding='2'>"
+            f"<tr><td width='60' style='color:{muted}; padding-right: 4px;'>Nc,Rd</td><td><b>{r.nc_rd_kn:.2f}&nbsp;kN</b></td>"
+            f"<td width='60' style='color:{muted}; padding-left: 16px;'>Nc,Sd</td><td><b>{r.ncsd_kn:.2f}&nbsp;kN</b></td></tr></table><br>"
+            f"<div style='padding-top: 20px;'><span style='color:{muted};'>Verificação: </span>"
+            f"<span style='font-weight: 700;'>{'Nc,Sd &le; Nc,Rd' if resistencia_ok else 'Nc,Sd &gt; Nc,Rd'}</span> &nbsp;"
+            f"<span style='font-size: 13pt; font-weight: 800; color:{cor_verificacao};'>{estado_verificacao}</span></div>"
+            "</div>"
         )
         self.ncrd_label.setText(f"{r.nc_rd_kn:.2f}")
         self.r0_label.setText(f"{r.r0_cm:.2f} cm")
-
-        cor = theme.SUCCESS if r.aprovado else theme.DANGER
-        taxa = r.taxa_utilizacao
-        self.utilizacao_bar.setValue(min(100, round(taxa * 100)) if taxa != float("inf") else 100)
-        self.utilizacao_bar.setFormat(
-            f"Taxa de utilização: {taxa * 100:.1f}%" if taxa != float("inf") else "Taxa de utilização: —"
-        )
-        self.utilizacao_bar.setStyleSheet(f"QProgressBar::chunk {{ background: {cor}; }}")
-        self.utilizacao_bar.show()
-
-        veredito = "APROVADO" if r.aprovado else "REPROVADO"
-        self.veredito_label.setText(
-            f"<span style='color:{cor}; font-size: 22pt; font-weight: 800;'>RESULTADO: {veredito}</span>"
-        )
-        self.veredito_label.show()
 
     def salvar(self) -> None:
         nome = self.nome_edit.text().strip()
@@ -510,7 +496,6 @@ class ProjectEditor(QWidget):
 
         loads = self._build_load_case()
         autor = self.autor_edit.text().strip() or None
-        observacoes = self.observacoes_edit.toPlainText().strip() or None
 
         if self._current_project_id is None:
             self._current_project_id = self._project_repo.create(
@@ -520,7 +505,6 @@ class ProjectEditor(QWidget):
                 bitola=profile.bitola,
                 steel_designacao=steel.designacao,
                 loads=loads,
-                observacoes=observacoes,
             )
         else:
             self._project_repo.update(
@@ -531,7 +515,6 @@ class ProjectEditor(QWidget):
                 bitola=profile.bitola,
                 steel_designacao=steel.designacao,
                 loads=loads,
-                observacoes=observacoes,
             )
 
         self.project_saved.emit()

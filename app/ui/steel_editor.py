@@ -11,10 +11,7 @@ from dataclasses import replace
 
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide6.QtWidgets import (
-    QHBoxLayout,
-    QInputDialog,
-    QMessageBox,
-    QPushButton,
+    QHeaderView,
     QTableView,
     QVBoxLayout,
     QWidget,
@@ -89,39 +86,9 @@ class SteelEditor(QWidget):
 
         self._table = QTableView()
         self._table.setModel(self._model)
-        self._table.horizontalHeader().setStretchLastSection(True)
-
-        btn_novo = QPushButton("Novo Tipo de Aço...")
-        btn_novo.clicked.connect(self._on_novo)
-        btn_remover = QPushButton("Remover")
-        btn_remover.clicked.connect(self._on_remover)
-
-        botoes = QHBoxLayout()
-        botoes.addWidget(btn_novo)
-        botoes.addWidget(btn_remover)
-        botoes.addStretch(1)
+        header = self._table.horizontalHeader()
+        for coluna in range(self._model.columnCount()):
+            header.setSectionResizeMode(coluna, QHeaderView.Stretch)
 
         layout = QVBoxLayout(self)
-        layout.addLayout(botoes)
         layout.addWidget(self._table)
-
-    def _on_novo(self) -> None:
-        designacao, ok = QInputDialog.getText(self, "Novo Tipo de Aço", "Designação (ex.: ASTM A572 Grau 50):")
-        if not ok or not designacao.strip():
-            return
-        designacao = designacao.strip()
-        if self._repo.get(designacao) is not None:
-            QMessageBox.warning(self, "Já existe", f"Já existe um aço '{designacao}'.")
-            return
-        self._repo.upsert(SteelType(designacao=designacao, fy_mpa=0.0, fu_mpa=0.0))
-        self._model.reload()
-
-    def _on_remover(self) -> None:
-        index = self._table.currentIndex()
-        if not index.isValid():
-            return
-        steel = self._model.steel_at(index.row())
-        resposta = QMessageBox.question(self, "Remover", f"Remover o aço '{steel.designacao}'?")
-        if resposta == QMessageBox.Yes:
-            self._repo.delete(steel.designacao)
-            self._model.reload()

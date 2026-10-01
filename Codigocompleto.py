@@ -310,9 +310,9 @@ else:
 
 print("\n" + "=" * 60)
 if Nc_Rd >= Nc_sd and esbeltez_max <= 200:
-    print(f" [✓] VEREDITO: APROVADO! Taxa de trabalho: {((Nc_sd/Nc_Rd)*100):.1f}%")
+    print(f" [✓] VERIFICAÇÃO: ATENDE AO DIMENSIONAMENTO. Taxa de trabalho: {((Nc_sd/Nc_Rd)*100):.1f}%")
 elif Nc_Rd < Nc_sd:
-    print(" [X] VEREDITO: REPROVADO! O esforço ultrapassa a capacidade.")
+    print(" [X] VERIFICAÇÃO: NÃO ATENDE AO DIMENSIONAMENTO. O esforço ultrapassa a capacidade.")
 else:
-    print(" [X] VEREDITO: REPROVADO! A peça é muito esbelta (\u03BB > 200).")
+    print(" [X] VERIFICAÇÃO: NÃO ATENDE AO DIMENSIONAMENTO. A esbeltez ultrapassa o limite.")
 print("=" * 60 + "\n")

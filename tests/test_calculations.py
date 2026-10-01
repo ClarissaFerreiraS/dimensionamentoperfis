@@ -69,11 +69,17 @@ def test_limite_esbeltez_atendido(resultado):
 def test_flambagem_local_mesa_nao_ocorre(resultado):
     assert resultado.bt_mesa == pytest.approx(8.859649, rel=1e-4)
     assert resultado.ocorre_flamb_mesa is False
+    assert resultado.b_mesa_mm == pytest.approx(50.5)
+    assert resultado.bef_mesa_mm == pytest.approx(resultado.b_mesa_mm)
+    assert resultado.sigma_el_mesa_mpa == 0
 
 
 def test_flambagem_local_alma_ocorre(resultado):
     assert resultado.bt_alma == pytest.approx(53.333333, rel=1e-4)
     assert resultado.ocorre_flamb_alma is True
+    assert resultado.c1_alma == pytest.approx(0.18)
+    assert resultado.c2_alma == pytest.approx(1.31)
+    assert resultado.sigma_el_alma_mpa > 0
     assert resultado.bef_alma_mm == pytest.approx(218.716483, rel=1e-4)
 
 

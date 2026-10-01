@@ -16,21 +16,7 @@ substitui essa leitura posicional por um catálogo **SQLite** editável, com o
 Excel como fonte de importação inicial (seed) e não mais como banco de dados
 de trabalho.
 
-## Baixar (Windows, sem instalar Python)
-
-Quem só quer usar o app no Windows não precisa instalar Python nem clonar o
-repositório: baixe o `.zip` mais recente na página de
-[Releases](../../releases), extraia em qualquer pasta e execute
-`Dimensionamento.exe`. O catálogo (`catalogo.db`) já vem populado, fica ao
-lado do `.exe` e pode ser editado normalmente pela aba "Catálogo de Perfis" —
-as alterações persistem entre execuções.
-
-Cada release é gerada automaticamente pelo workflow
-`.github/workflows/build-windows.yml` ao publicar uma tag `vX.Y.Z` (ou
-manualmente via "Run workflow" na aba Actions, o que gera um artefato de
-build sem publicar release).
-
-## Instalação (rodando a partir do código-fonte)
+## Instalação
 
 ```bash
 python3 -m venv .venv
@@ -50,10 +36,8 @@ formas:
 python -m app.importers.excel_importer "ELU Compressão.xlsx" catalogo.db
 ```
 
-**Via interface:** abra o app, vá em "Catálogo de Perfis" → "Importar do
-Excel..." e selecione o arquivo `.xlsx`. Pode ser repetido a qualquer momento
-para atualizar o catálogo com uma planilha nova (upsert por bitola/designação;
-nada é apagado).
+Essa carga deve ser feita antes de usar o app. Depois disso, os catálogos são
+exibidos como dados fixos e somente para consulta.
 
 ## Rodando o app
 
@@ -68,11 +52,10 @@ Abas disponíveis:
   informar `Nc,Sd` e os parâmetros de flambagem (`Kx/Lx`, `Ky/Ly`, `Kz/Lz`,
   `Ea`/`Ga`), calcular o dimensionamento, visualizar a seção cotada e gerar o
   memorial em PDF.
-- **Catálogo de Perfis** — tabelas editáveis de perfis laminados e soldados;
-  cada edição de célula é gravada imediatamente no banco (não há botão
-  "Salvar" separado).
-- **Tipos de Aço** — tabela editável de `fy`/`fu` por designação, mesmo
-  padrão de gravação imediata.
+- **Catálogo de Perfis** — tabelas fixas, somente para consulta, de perfis
+  laminados e soldados.
+- **Tipos de Aço** — tabela fixa, somente para consulta, de `fy`/`fu` por
+  designação.
 
 **Importante:** um projeto salvo guarda apenas os *dados de entrada* (perfil,
 aço, cargas). O resultado (`Nc,Rd`, veredito etc.) é **recalculado toda vez
@@ -94,9 +77,6 @@ mesmos números (`Nc,Rd ≈ 626,76 kN`, aprovado).
 ## Arquitetura
 
 ```
-run_app.py              # ponto de entrada do build PyInstaller (ver packaging/)
-packaging/
-└── pyinstaller.spec     # build onedir; empacota app/db/schema.sql como dado
 app/
 ├── main.py              # bootstrap: abre o banco, abre a janela principal
 ├── db/                  # schema.sql (DDL) + conexão SQLite

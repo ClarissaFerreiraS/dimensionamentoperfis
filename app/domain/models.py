@@ -106,6 +106,10 @@ class DesignResult:
     limite_norma_mesa: float
     limite_efetivo_mesa: float
     ocorre_flamb_mesa: bool
+    b_mesa_mm: float
+    c1_mesa: float
+    c2_mesa: float
+    sigma_el_mesa_mpa: float
     bef_mesa_mm: float
 
     # Flambagem local - alma
@@ -113,6 +117,10 @@ class DesignResult:
     limite_norma_alma: float
     limite_efetivo_alma: float
     ocorre_flamb_alma: bool
+    b_alma_mm: float
+    c1_alma: float
+    c2_alma: float
+    sigma_el_alma_mpa: float
     bef_alma_mm: float
 
     # Área efetiva / resistência

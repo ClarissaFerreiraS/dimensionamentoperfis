@@ -127,7 +127,6 @@ class _ProjectsTab(QWidget):
             bitola=row["bitola"],
             steel_designacao=row["steel_designacao"],
             loads=loads,
-            observacoes=row["observacoes"],
         )
         self._reload_lista()
         for i in range(self._lista.count()):

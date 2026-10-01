@@ -87,6 +87,5 @@ CREATE TABLE IF NOT EXISTS projects (
     ky                REAL NOT NULL DEFAULT 1.0,
     ly_m              REAL NOT NULL,
     kz                REAL NOT NULL DEFAULT 1.0,
-    lz_m              REAL NOT NULL,
-    observacoes       TEXT
+    lz_m              REAL NOT NULL
 );
