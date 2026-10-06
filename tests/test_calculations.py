@@ -10,6 +10,8 @@ alterou nenhuma fórmula.
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from app.domain.calculations import calcular_pilar
@@ -88,6 +90,16 @@ def test_area_efetiva_e_resistencia(resultado):
     assert resultado.nc_rd_kn == pytest.approx(626.764068, rel=1e-4)
 
 
-def test_veredito_aprovado(resultado):
+def test_verificacao_resistencia_atendida(resultado):
     assert resultado.nc_rd_kn >= resultado.ncsd_kn
-    assert resultado.aprovado is True
+    assert resultado.atende_resistencia is True
+
+
+def test_falha_de_esbeltez_nao_altera_verificacao_de_resistencia():
+    loads = replace(CARREGAMENTO, ncsd_kn=1.0, ly_m=4.0)
+    resultado = calcular_pilar(PERFIL_W310X21, ACO_A572_GR50, loads)
+
+    assert resultado.esbeltez_max > resultado.limite_esbeltez
+    assert resultado.atende_esbeltez is False
+    assert resultado.nc_rd_kn >= resultado.ncsd_kn
+    assert resultado.atende_resistencia is True

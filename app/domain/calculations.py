@@ -24,8 +24,8 @@ def calcular_pilar(profile: Profile, steel: SteelType, loads: LoadCase) -> Desig
     """Dimensiona um pilar à compressão axial, retornando todos os intermediários.
 
     Réplica fiel das fórmulas de ``CodigocomPDF.py`` para os dois casos
-    (laminado/soldado), incluindo o veredito final que exige simultaneamente
-    ``Nc_Rd >= Nc_Sd`` **e** ``esbeltez_max <= 200``.
+    (laminado/soldado). A resistência e o limite de esbeltez são retornados
+    como verificações independentes.
     """
 
     fy = steel.fy_mpa
@@ -117,7 +117,7 @@ def calcular_pilar(profile: Profile, steel: SteelType, loads: LoadCase) -> Desig
     # --- 3. Resistência e veredito -----------------------------------------------
     nc_rd = (chi * a_ef_cm2 * (fy / 10)) / GAMA_A1
     ncsd = loads.ncsd_kn
-    aprovado = (nc_rd >= ncsd) and atende_esbeltez
+    atende_resistencia = nc_rd >= ncsd
 
     return DesignResult(
         esbeltez_x=esbeltez_x,
@@ -156,5 +156,5 @@ def calcular_pilar(profile: Profile, steel: SteelType, loads: LoadCase) -> Desig
         aef_cm2=a_ef_cm2,
         nc_rd_kn=nc_rd,
         ncsd_kn=ncsd,
-        aprovado=aprovado,
+        atende_resistencia=atende_resistencia,
     )

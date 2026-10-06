@@ -129,9 +129,9 @@ class DesignResult:
     aef_cm2: float
     nc_rd_kn: float
 
-    # Veredito
+    # Verificação da resistência à compressão, independente da esbeltez global
     ncsd_kn: float
-    aprovado: bool
+    atende_resistencia: bool
 
     @property
     def taxa_utilizacao(self) -> float:

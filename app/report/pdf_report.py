@@ -396,14 +396,14 @@ def _add_flambagem_local(pdf: FPDF, profile: Profile, r: DesignResult) -> None:
 
 
 def _add_resultado(pdf: FPDF, r: DesignResult) -> None:
-    _add_secao(pdf, "4. VERIFICAÇÃO DO DIMENSIONAMENTO")
+    _add_secao(pdf, "4. VERIFICAÇÃO DA RESISTÊNCIA À COMPRESSÃO")
     _add_linha_rotulada(pdf, "Esforço resistente (Nc,Rd)", f": {r.nc_rd_kn:.2f} kN")
     _add_linha_rotulada(pdf, "Esforço solicitante (Nc,Sd)", f": {r.ncsd_kn:.2f} kN")
 
     resistencia_ok = r.nc_rd_kn >= r.ncsd_kn
     comparacao = "Nc,Sd <= Nc,Rd" if resistencia_ok else "Nc,Sd > Nc,Rd"
-    status = "ATENDE AO DIMENSIONAMENTO" if r.aprovado else "NÃO ATENDE AO DIMENSIONAMENTO"
-    if r.aprovado:
+    status = "ATENDE AO DIMENSIONAMENTO" if r.atende_resistencia else "NÃO ATENDE AO DIMENSIONAMENTO"
+    if r.atende_resistencia:
         pdf.set_fill_color(220, 245, 225)
         pdf.set_text_color(25, 105, 50)
     else:

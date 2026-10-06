@@ -265,7 +265,7 @@ class ProjectEditor(QWidget):
         self.resultado_label.setWordWrap(True)
         self.resultado_label.setTextFormat(Qt.RichText)
         self.resultado_label.setMinimumWidth(0)
-        self.resultado_label.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Expanding)
+        self.resultado_label.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
         self.resultado_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
         self.resultado_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         btn_pdf = QPushButton("GERAR MEMORIAL PDF")
@@ -277,6 +277,7 @@ class ProjectEditor(QWidget):
         rodape.addWidget(btn_pdf)
 
         box = QGroupBox("Resultado")
+        box.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Expanding)
         layout = QVBoxLayout(box)
         layout.setSpacing(4)
         layout.addWidget(self.resultado_label, 1)
@@ -449,34 +450,43 @@ class ProjectEditor(QWidget):
 
     def _atualizar_resultado(self, profile: Profile, steel: SteelType, r: DesignResult) -> None:
         muted = theme.TEXT_MUTED
-        cor_verificacao = theme.SUCCESS if r.aprovado else theme.DANGER
-        estado_verificacao = "ATENDE AO DIMENSIONAMENTO" if r.aprovado else "NÃO ATENDE AO DIMENSIONAMENTO"
-        resistencia_ok = r.nc_rd_kn >= r.ncsd_kn
+        comparacao_resistencia = "Nc,Sd ≤ Nc,Rd" if r.atende_resistencia else "Nc,Sd > Nc,Rd"
+        estado_resistencia = (
+            "ATENDE AO DIMENSIONAMENTO"
+            if r.atende_resistencia
+            else "NÃO ATENDE AO DIMENSIONAMENTO"
+        )
+        estado_esbeltez = "ATENDE" if r.atende_esbeltez else "NÃO ATENDE"
+        cor_resistencia = theme.SUCCESS if r.atende_resistencia else theme.DANGER
+        cor_esbeltez = theme.SUCCESS if r.atende_esbeltez else theme.DANGER
         self.resultado_label.setText(
-            "<div style='font-size: 11pt;'>"
-            "<table cellspacing='0' cellpadding='2'>"
-            f"<tr><td width='60' style='color:{muted}; padding-right: 4px;'>Perfil</td><td style='white-space: nowrap;'><b>{html.escape(profile.bitola)}</b> ({profile.family.value})</td></tr>"
-            f"<tr><td width='60' style='color:{muted}; padding-right: 4px;'>Aço</td><td style='white-space: nowrap;'><b>{html.escape(steel.designacao)}</b></td></tr>"
-            "</table><br>"
-            f"<div style='color:{muted}; padding-top: 12px;'>Cargas críticas de instabilidade</div>"
-            "<table width='100%' cellspacing='0' cellpadding='2'>"
-            f"<tr><td width='115' style='color:{muted};'>Nex (flexão X)</td><td><b>{r.nex_kn:.2f}&nbsp;kN</b></td>"
-            f"<td width='115' style='color:{muted};'>Ney (flexão Y)</td><td><b>{r.ney_kn:.2f}&nbsp;kN</b></td></tr>"
-            f"<tr><td width='115' style='color:{muted};'>Nez (torção)</td><td><b>{r.nez_kn:.2f}&nbsp;kN</b></td>"
-            f"<td width='115' style='color:{muted};'>Ne,min</td><td><b>{r.ne_min_kn:.2f}&nbsp;kN</b></td></tr>"
-            "</table><br>"
-            f"<div style='color:{muted}; padding-top: 16px; font-weight: 600;'>Índice de esbeltez e fator de redução</div>"
-            f"<table cellspacing='0' cellpadding='2'><tr><td width='60' style='color:{muted}; padding-right: 4px;'>χ &nbsp;/&nbsp; λ₀</td><td>{r.chi:.4f} &nbsp;/&nbsp; {r.lambda0:.4f}</td></tr></table><br>"
-            f"<div style='color:{muted}; padding-top: 16px; font-weight: 600;'>Flambagem local</div>"
-            f"<table cellspacing='0' cellpadding='2'><tr><td width='60' style='color:{muted}; padding-right: 4px;'>Mesa</td><td>{'Ocorre flambagem' if r.ocorre_flamb_mesa else 'Não ocorre flambagem'}</td></tr>"
-            f"<tr><td width='60' style='color:{muted}; padding-right: 4px;'>Alma</td><td>{'Ocorre flambagem' if r.ocorre_flamb_alma else 'Não ocorre flambagem'}</td></tr></table><br>"
-            f"<div style='color:{muted}; padding-top: 16px; font-weight: 600;'>Resistência à compressão</div>"
-            "<table cellspacing='0' cellpadding='2'>"
-            f"<tr><td width='60' style='color:{muted}; padding-right: 4px;'>Nc,Rd</td><td><b>{r.nc_rd_kn:.2f}&nbsp;kN</b></td>"
-            f"<td width='60' style='color:{muted}; padding-left: 16px;'>Nc,Sd</td><td><b>{r.ncsd_kn:.2f}&nbsp;kN</b></td></tr></table><br>"
-            f"<div style='padding-top: 20px;'><span style='color:{muted};'>Verificação: </span>"
-            f"<span style='font-weight: 700;'>{'Nc,Sd &le; Nc,Rd' if resistencia_ok else 'Nc,Sd &gt; Nc,Rd'}</span> &nbsp;"
-            f"<span style='font-size: 13pt; font-weight: 800; color:{cor_verificacao};'>{estado_verificacao}</span></div>"
+            "<div style='font-size: 12pt;'>"
+            f"<div><b>Perfil:</b> {html.escape(profile.bitola)} ({profile.family.value})</div>"
+            f"<div><b>Aço:</b> {html.escape(steel.designacao)}</div>"
+            f"<p style='color:{muted}; margin: 10px 0 3px 0; font-weight: 600;'>Cargas críticas de Instabilidade</p>"
+            "<table width='100%' cellspacing='0' cellpadding='3'>"
+            f"<tr><td width='50%'>Nex (flexão X): <b>{r.nex_kn:.2f} kN</b></td>"
+            f"<td width='50%'>Ney (flexão Y): <b>{r.ney_kn:.2f} kN</b></td></tr>"
+            f"<tr><td>Nez (torção): <b>{r.nez_kn:.2f} kN</b></td>"
+            f"<td>Ne,min: <b>{r.ne_min_kn:.2f} kN</b></td></tr>"
+            "</table>"
+            f"<p style='color:{muted}; margin: 10px 0 3px 0; font-weight: 600;'>Índice de Esbeltez e fator de redução</p>"
+            f"<div>χ / λ₀: <b>{r.chi:.4f} / {r.lambda0:.4f}</b></div>"
+            f"<p style='color:{muted}; margin: 10px 0 3px 0; font-weight: 600;'>Flambagem Local</p>"
+            f"<div>Mesa: {'ocorre flambagem' if r.ocorre_flamb_mesa else 'não ocorre flambagem'}</div>"
+            f"<div>Alma: {'ocorre flambagem' if r.ocorre_flamb_alma else 'não ocorre flambagem'}</div>"
+            f"<p style='color:{muted}; margin: 10px 0 3px 0; font-weight: 600;'>Resistência à compressão</p>"
+            "<table width='100%' cellspacing='0' cellpadding='3'>"
+            f"<tr><td width='50%'>Nc,Rd: <b>{r.nc_rd_kn:.2f} kN</b></td>"
+            f"<td width='50%'>Nc,Sd: <b>{r.ncsd_kn:.2f} kN</b></td></tr>"
+            "</table>"
+            f"<div style='padding-top: 12px;'><b>Verificação da resistência:</b> "
+            f"<span style='color:{cor_resistencia};'>{estado_resistencia}</span> "
+            f"<span style='color:{muted};'>({comparacao_resistencia})</span></div>"
+            f"<div style='padding-top: 7px;'><b>Limite de esbeltez:</b> "
+            f"<span style='color:{cor_esbeltez};'>{estado_esbeltez} AO LIMITE</span> "
+            f"<span style='color:{muted};'>(esbeltez máxima: {r.esbeltez_max:.2f}; "
+            f"limite: {r.limite_esbeltez:.0f})</span></div>"
             "</div>"
         )
         self.ncrd_label.setText(f"{r.nc_rd_kn:.2f}")
