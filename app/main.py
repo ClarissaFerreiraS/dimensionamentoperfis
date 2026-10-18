@@ -17,7 +17,7 @@ def main() -> int:
 
     conn = open_database(DEFAULT_DB_PATH)
     window = MainWindow(conn, DEFAULT_DB_PATH)
-    window.show()
+    window.showMaximized()
 
     exit_code = app.exec()
     conn.close()

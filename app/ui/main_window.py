@@ -5,7 +5,8 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QRectF, QSize, Qt
+from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -26,6 +27,100 @@ from app.ui.catalog_editor import CatalogEditor
 from app.ui.profile_details import ProfileDetailsTab
 from app.ui.project_editor import ProjectEditor
 from app.ui.steel_editor import SteelEditor
+from app.ui import theme
+
+
+def _app_icon() -> QIcon:
+    pixmap = QPixmap(64, 64)
+    pixmap.fill(Qt.transparent)
+
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.Antialiasing)
+    painter.setPen(Qt.NoPen)
+    painter.setBrush(QColor("#2f6f9f"))
+    painter.drawRoundedRect(QRectF(3, 3, 58, 58), 12, 12)
+
+    painter.setBrush(QColor("#ffffff"))
+    painter.drawRoundedRect(QRectF(12, 12, 40, 9), 2, 2)
+    painter.drawRoundedRect(QRectF(27, 19, 10, 27), 2, 2)
+    painter.drawRoundedRect(QRectF(12, 43, 40, 9), 2, 2)
+
+    painter.setPen(QPen(QColor("#f0a04b"), 3))
+    painter.drawLine(14, 56, 50, 56)
+    painter.drawLine(14, 52, 14, 60)
+    painter.drawLine(50, 52, 50, 60)
+    painter.end()
+    return QIcon(pixmap)
+
+
+def _duplicate_icon() -> QIcon:
+    pixmap = QPixmap(32, 32)
+    pixmap.fill(Qt.transparent)
+
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.Antialiasing)
+    painter.setPen(QPen(QColor(theme.TEXT), 2.6))
+    painter.setBrush(QColor(theme.SURFACE))
+    painter.drawRoundedRect(QRectF(8, 2, 20, 22), 4, 4)
+    painter.drawRoundedRect(QRectF(2, 8, 20, 22), 4, 4)
+    painter.end()
+    return QIcon(pixmap)
+
+
+def _delete_icon() -> QIcon:
+    pixmap = QPixmap(32, 32)
+    pixmap.fill(Qt.transparent)
+
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.Antialiasing)
+    dark_blue = QColor("#234c70")
+    blue = QColor("#2f6f9f")
+    painter.setPen(QPen(dark_blue, 2.1))
+    painter.setBrush(QColor("#ffffff"))
+    painter.drawRoundedRect(QRectF(8, 9, 16, 19), 2, 2)
+
+    painter.setPen(Qt.NoPen)
+    painter.setBrush(blue)
+    painter.drawRoundedRect(QRectF(6, 6, 20, 4), 2, 2)
+    painter.drawRoundedRect(QRectF(13, 3, 6, 4), 2, 2)
+
+    painter.setPen(QPen(dark_blue, 1.7))
+    painter.drawLine(13, 13, 13, 24)
+    painter.drawLine(19, 13, 19, 24)
+    painter.end()
+    return QIcon(pixmap)
+
+
+def _pdf_icon() -> QIcon:
+    pixmap = QPixmap(64, 64)
+    pixmap.fill(Qt.transparent)
+
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.Antialiasing)
+    blue = QColor("#2f6f9f")
+    dark_blue = QColor("#234c70")
+    painter.setPen(QPen(dark_blue, 2.4))
+    painter.setBrush(QColor("#ffffff"))
+    painter.drawRoundedRect(QRectF(7, 2, 50, 60), 4, 4)
+    painter.drawLine(40, 2, 57, 19)
+    painter.drawLine(40, 2, 40, 19)
+    painter.drawLine(40, 19, 57, 19)
+
+    painter.setPen(Qt.NoPen)
+    painter.setBrush(blue)
+    painter.drawRoundedRect(QRectF(10, 23, 44, 18), 3, 3)
+    painter.setPen(QColor("#ffffff"))
+    painter.setFont(QFont("Arial", 15, QFont.Bold))
+    painter.drawText(QRectF(10, 23, 44, 18), Qt.AlignCenter, "PDF")
+
+    painter.setPen(QPen(dark_blue, 3.2))
+    painter.setBrush(Qt.NoBrush)
+    painter.drawLine(32, 46, 32, 55)
+    painter.drawLine(27, 51, 32, 56)
+    painter.drawLine(37, 51, 32, 56)
+    painter.drawLine(23, 59, 41, 59)
+    painter.end()
+    return QIcon(pixmap)
 
 
 class _ProjectsTab(QWidget):
@@ -47,15 +142,15 @@ class _ProjectsTab(QWidget):
         barra = QHBoxLayout()
         barra.setSpacing(0)
         for texto, icone, atalho, acao in (
-            ("Novo", QStyle.SP_FileIcon, "Ctrl+N", self._on_novo),
+            ("Novo", QStyle.SP_FileDialogNewFolder, "Ctrl+N", self._on_novo),
             ("Salvar", QStyle.SP_DialogSaveButton, "Ctrl+S", self.editor.salvar),
-            ("Duplicar", QStyle.SP_FileDialogNewFolder, "Ctrl+D", self._on_duplicar),
-            ("PDF", QStyle.SP_FileDialogDetailedView, "Ctrl+P", self.editor.gerar_pdf),
-            ("Excluir", QStyle.SP_TrashIcon, "Delete", self._on_excluir),
+            ("Duplicar", _duplicate_icon(), "Ctrl+D", self._on_duplicar),
+            ("PDF", _pdf_icon(), "Ctrl+P", self.editor.gerar_pdf),
+            ("Excluir", _delete_icon(), "Delete", self._on_excluir),
         ):
             botao = QToolButton()
             botao.setText(texto)
-            botao.setIcon(icones.standardIcon(icone))
+            botao.setIcon(icone if isinstance(icone, QIcon) else icones.standardIcon(icone))
             botao.setIconSize(QSize(22, 22))
             botao.setMinimumWidth(botao.fontMetrics().horizontalAdvance(texto) + 14)
             botao.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
@@ -75,7 +170,7 @@ class _ProjectsTab(QWidget):
 
         separador = QFrame()
         separador.setFrameShape(QFrame.VLine)
-        separador.setStyleSheet("color: #43464d;")
+        separador.setStyleSheet(f"color: {theme.BORDER};")
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(12, 12, 12, 12)
@@ -139,8 +234,15 @@ class _ProjectsTab(QWidget):
         project_id = self._current_project_id()
         if project_id is None:
             return
-        resposta = QMessageBox.question(self, "Excluir Projeto", "Excluir o projeto selecionado?")
-        if resposta == QMessageBox.Yes:
+        dialogo = QMessageBox(self)
+        dialogo.setIcon(QMessageBox.Question)
+        dialogo.setWindowTitle("Excluir Projeto")
+        dialogo.setText("Excluir o projeto selecionado?")
+        botao_sim = dialogo.addButton("Sim", QMessageBox.YesRole)
+        botao_nao = dialogo.addButton("Não", QMessageBox.NoRole)
+        dialogo.setDefaultButton(botao_nao)
+        dialogo.exec()
+        if dialogo.clickedButton() is botao_sim:
             self._repo.delete(project_id)
             self.editor.load_new()
             self._reload_lista()
@@ -149,7 +251,8 @@ class _ProjectsTab(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self, conn: sqlite3.Connection, db_path: str | Path) -> None:
         super().__init__()
-        self.setWindowTitle("Dimensionamento de Pilares — NBR 8800:2024")
+        self.setWindowTitle("Dimensionamento de Perfis Metálicos - ABNT NBR 8800:2024")
+        self.setWindowIcon(_app_icon())
         self.resize(1280, 820)
 
         abas = QTabWidget()

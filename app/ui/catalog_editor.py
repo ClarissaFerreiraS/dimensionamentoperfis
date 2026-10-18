@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+import re
 from pathlib import Path
 
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
@@ -40,6 +41,19 @@ _COLUNAS_LAMINADO = [
 _COLUNAS_SOLDADO = [c for c in _COLUNAS_LAMINADO if c[1] != "d_linha_mm"]
 
 
+def _chave_bitola(bitola: str) -> tuple[str, tuple[tuple[int, float | str], ...]]:
+    partes: list[tuple[int, float | str]] = []
+    for parte in re.split(r"(\d+(?:[.,]\d+)?)", bitola):
+        if not parte:
+            continue
+        if re.fullmatch(r"\d+(?:[.,]\d+)?", parte):
+            partes.append((0, float(parte.replace(",", "."))))
+        else:
+            partes.append((1, parte.lower()))
+    familia = bitola.split(maxsplit=1)[0].lower()
+    return familia, tuple(partes)
+
+
 class _ProfileTableModel(QAbstractTableModel):
     def __init__(self, repo: ProfileRepository, family: ProfileFamily) -> None:
         super().__init__()
@@ -51,7 +65,10 @@ class _ProfileTableModel(QAbstractTableModel):
 
     def reload(self) -> None:
         self.beginResetModel()
-        self._rows = self._repo.list_all(self._family)
+        self._rows = sorted(
+            self._repo.list_all(self._family),
+            key=lambda profile: _chave_bitola(profile.bitola),
+        )
         self.endResetModel()
 
     def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:  # noqa: N802

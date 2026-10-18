@@ -12,11 +12,10 @@ import html
 import re
 from pathlib import Path
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QStandardPaths, Qt, Signal
 from PySide6.QtWidgets import (
     QComboBox,
     QDoubleSpinBox,
-    QFileDialog,
     QFormLayout,
     QFrame,
     QGridLayout,
@@ -122,18 +121,21 @@ class ProjectEditor(QWidget):
         self.autor_edit = QLineEdit()
         self.autor_edit.setPlaceholderText("Responsável técnico")
         self.aco_combo = QComboBox()
+        theme.configure_combo(self.aco_combo)
         self.aco_combo.currentIndexChanged.connect(self._on_aco_changed)
         self.ea_spin = _spinbox(1.0, 1000.0, 1, 200.0, " GPa")
         self.ga_spin = _spinbox(1.0, 1000.0, 1, 77.0, " GPa")
         self.ea_spin.setMinimumWidth(85)
         self.ga_spin.setMinimumWidth(85)
         self.fy_label = _label("—", "value")
+        label_ea = _label("Eₐ", "materialProperty")
+        label_ga = _label("Gₐ", "materialProperty")
 
         props = QHBoxLayout()
-        props.addWidget(_label("Eₐ"))
+        props.addWidget(label_ea)
         props.addWidget(self.ea_spin)
         props.addStretch(1)
-        props.addWidget(_label("Gₐ"))
+        props.addWidget(label_ga)
         props.addWidget(self.ga_spin)
         props.addStretch(1)
         props.addWidget(_label("fy"))
@@ -152,10 +154,12 @@ class ProjectEditor(QWidget):
 
     def _build_perfil_box(self) -> QGroupBox:
         self.familia_combo = QComboBox()
+        theme.configure_combo(self.familia_combo)
         self.familia_combo.addItem("Laminado (W / HP)", ProfileFamily.LAMINADO)
         self.familia_combo.addItem("Soldado (CS)", ProfileFamily.SOLDADO)
         self.familia_combo.currentIndexChanged.connect(self._on_familia_changed)
         self.bitola_combo = QComboBox()
+        theme.configure_combo(self.bitola_combo, allow_scroll=True)
         self.bitola_combo.currentIndexChanged.connect(self._on_bitola_changed)
 
         form = QFormLayout()
@@ -262,6 +266,7 @@ class ProjectEditor(QWidget):
 
     def _build_resultado_box(self) -> QGroupBox:
         self.resultado_label = QLabel(_MSG_INICIAL)
+        self.resultado_label.setObjectName("resultText")
         self.resultado_label.setWordWrap(True)
         self.resultado_label.setTextFormat(Qt.RichText)
         self.resultado_label.setMinimumWidth(0)
@@ -450,6 +455,7 @@ class ProjectEditor(QWidget):
 
     def _atualizar_resultado(self, profile: Profile, steel: SteelType, r: DesignResult) -> None:
         muted = theme.TEXT_MUTED
+        section_color = theme.TEXT_SECTION
         comparacao_resistencia = "Nc,Sd ≤ Nc,Rd" if r.atende_resistencia else "Nc,Sd > Nc,Rd"
         estado_resistencia = (
             "ATENDE AO DIMENSIONAMENTO"
@@ -463,30 +469,30 @@ class ProjectEditor(QWidget):
             "<div style='font-size: 12pt;'>"
             f"<div><b>Perfil:</b> {html.escape(profile.bitola)} ({profile.family.value})</div>"
             f"<div><b>Aço:</b> {html.escape(steel.designacao)}</div>"
-            f"<p style='color:{muted}; margin: 10px 0 3px 0; font-weight: 600;'>Cargas críticas de Instabilidade</p>"
+            f"<p style='color:{section_color}; margin: 10px 0 3px 0; font-weight: 600;'>Cargas críticas de Instabilidade</p>"
             "<table width='100%' cellspacing='0' cellpadding='3'>"
             f"<tr><td width='50%'>Nex (flexão X): <b>{r.nex_kn:.2f} kN</b></td>"
             f"<td width='50%'>Ney (flexão Y): <b>{r.ney_kn:.2f} kN</b></td></tr>"
             f"<tr><td>Nez (torção): <b>{r.nez_kn:.2f} kN</b></td>"
             f"<td>Ne,min: <b>{r.ne_min_kn:.2f} kN</b></td></tr>"
             "</table>"
-            f"<p style='color:{muted}; margin: 10px 0 3px 0; font-weight: 600;'>Índice de Esbeltez e fator de redução</p>"
+            f"<p style='color:{section_color}; margin: 10px 0 3px 0; font-weight: 600;'>Índice de Esbeltez e fator de redução</p>"
             f"<div>χ / λ₀: <b>{r.chi:.4f} / {r.lambda0:.4f}</b></div>"
-            f"<p style='color:{muted}; margin: 10px 0 3px 0; font-weight: 600;'>Flambagem Local</p>"
+            f"<p style='color:{section_color}; margin: 10px 0 3px 0; font-weight: 600;'>Flambagem Local</p>"
             f"<div>Mesa: {'ocorre flambagem' if r.ocorre_flamb_mesa else 'não ocorre flambagem'}</div>"
             f"<div>Alma: {'ocorre flambagem' if r.ocorre_flamb_alma else 'não ocorre flambagem'}</div>"
-            f"<p style='color:{muted}; margin: 10px 0 3px 0; font-weight: 600;'>Resistência à compressão</p>"
+            f"<p style='color:{section_color}; margin: 10px 0 3px 0; font-weight: 600;'>Resistência à compressão</p>"
             "<table width='100%' cellspacing='0' cellpadding='3'>"
             f"<tr><td width='50%'>Nc,Rd: <b>{r.nc_rd_kn:.2f} kN</b></td>"
             f"<td width='50%'>Nc,Sd: <b>{r.ncsd_kn:.2f} kN</b></td></tr>"
             "</table>"
-            f"<div style='padding-top: 12px;'><b>Verificação da resistência:</b> "
+            f"<p style='margin: 10px 0 0 0; white-space: nowrap;'><nobr><b>Verificação:</b> "
             f"<span style='color:{cor_resistencia};'>{estado_resistencia}</span> "
-            f"<span style='color:{muted};'>({comparacao_resistencia})</span></div>"
-            f"<div style='padding-top: 7px;'><b>Limite de esbeltez:</b> "
+            f"<span style='color:{muted};'>({comparacao_resistencia})</span></nobr></p>"
+            f"<p style='margin: 5px 0 0 0; white-space: nowrap;'><nobr><b>Limite de esbeltez:</b> "
             f"<span style='color:{cor_esbeltez};'>{estado_esbeltez} AO LIMITE</span> "
             f"<span style='color:{muted};'>(esbeltez máxima: {r.esbeltez_max:.2f}; "
-            f"limite: {r.limite_esbeltez:.0f})</span></div>"
+            f"limite: {r.limite_esbeltez:.0f})</span></nobr></p>"
             "</div>"
         )
         self.ncrd_label.setText(f"{r.nc_rd_kn:.2f}")
@@ -539,8 +545,9 @@ class ProjectEditor(QWidget):
         loads = self._build_load_case()
         assert profile is not None and steel is not None and self._current_result is not None
 
-        pasta = QFileDialog.getExistingDirectory(self, "Escolha a pasta para salvar o PDF")
-        if not pasta:
+        pasta_downloads = QStandardPaths.writableLocation(QStandardPaths.DownloadLocation)
+        if not pasta_downloads:
+            QMessageBox.critical(self, "Erro ao gerar PDF", "Não foi possível localizar a pasta Downloads.")
             return
 
         autor = self.autor_edit.text().strip() or None
@@ -551,7 +558,7 @@ class ProjectEditor(QWidget):
                 loads=loads,
                 result=self._current_result,
                 autor=autor,
-                output_dir=pasta,
+                output_dir=pasta_downloads,
             )
         except Exception as exc:  # noqa: BLE001 — reportado ao usuário, não é fatal para o app
             QMessageBox.critical(self, "Erro ao gerar PDF", str(exc))

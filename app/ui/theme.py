@@ -1,4 +1,4 @@
-"""Tema escuro do app (paleta Fusion + folha de estilo Qt).
+"""Tema claro do app (paleta Fusion + folha de estilo Qt).
 
 Centraliza as cores para que widgets pintados à mão (ex.: ``SectionCanvas``)
 e o texto do resultado usem os mesmos tons da folha de estilo.
@@ -6,18 +6,88 @@ e o texto do resultado usem os mesmos tons da folha de estilo.
 
 from __future__ import annotations
 
+from PySide6.QtCore import QEvent, QObject, QPoint, Qt, QTimer
 from PySide6.QtGui import QColor, QPalette
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QComboBox, QStyleOptionViewItem, QStyledItemDelegate
 
-BG = "#1e1f22"
-SURFACE = "#26282c"
-FIELD = "#303338"
-BORDER = "#43464d"
-TEXT = "#e6e6e6"
-TEXT_MUTED = "#9aa0a6"
-ACCENT = "#4c8bf5"
-SUCCESS = "#3fb950"
-DANGER = "#f85149"
+BG = "#f5f7fa"
+SURFACE = "#ffffff"
+FIELD = "#ffffff"
+BORDER = "#d0d7de"
+TEXT = "#1f2328"
+TEXT_MUTED = "#1f2328"
+TEXT_SECTION = "#1f2328"
+ACCENT = "#2563eb"
+SUCCESS = "#138a3d"
+DANGER = "#d32f2f"
+
+
+class _ComboItemDelegate(QStyledItemDelegate):
+    def paint(self, painter, option, index) -> None:
+        item_option = QStyleOptionViewItem(option)
+        item_option.features &= ~QStyleOptionViewItem.HasCheckIndicator
+        item_option.checkState = Qt.Unchecked
+        super().paint(painter, item_option, index)
+
+
+class _ComboPopupController(QObject):
+    def __init__(self, combo: QComboBox, constrain_height: bool) -> None:
+        super().__init__(combo.view())
+        self._combo = combo
+        self._constrain_height = constrain_height
+
+    def eventFilter(self, watched, event) -> bool:
+        if event.type() == QEvent.Show:
+            for delay in (0, 50, 150):
+                QTimer.singleShot(delay, lambda view=watched: self._fix_position(view))
+        return super().eventFilter(watched, event)
+
+    def _fix_position(self, view) -> None:
+        if view.isVisible():
+            view.verticalScrollBar().setValue(0)
+            popup = view.window()
+            screen = self._combo.screen()
+            if screen is None:
+                return
+
+            combo_top_left = self._combo.mapToGlobal(QPoint(0, 0))
+            combo_bottom = combo_top_left.y() + self._combo.height()
+            if not self._constrain_height:
+                popup.move(combo_top_left.x(), combo_bottom)
+                return
+
+            screen_geometry = screen.availableGeometry()
+            space_below = screen_geometry.bottom() - combo_bottom + 1
+            space_above = combo_top_left.y() - screen_geometry.top()
+            popup.setMaximumHeight(16777215)
+            row_height = view.sizeHintForRow(0)
+            if row_height <= 0:
+                row_height = self._combo.fontMetrics().height() + 8
+            item_count = max(view.model().rowCount(), 1)
+            natural_height = max(
+                popup.sizeHint().height(),
+                row_height * item_count + 2,
+            )
+            popup_height = min(natural_height, max(space_below, space_above))
+            popup.setMaximumHeight(popup_height)
+            popup.resize(popup.width(), popup_height)
+
+            if space_below >= popup_height or space_below >= space_above:
+                popup.move(combo_top_left.x(), combo_bottom)
+            else:
+                popup.move(
+                    combo_top_left.x(),
+                    combo_top_left.y() - popup_height,
+                )
+
+
+def configure_combo(combo: QComboBox, allow_scroll: bool = False) -> None:
+    view = combo.view()
+    view.setItemDelegate(_ComboItemDelegate(view))
+    if not allow_scroll:
+        view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+    view.installEventFilter(_ComboPopupController(combo, allow_scroll))
+
 
 _STYLESHEET = f"""
 QWidget {{ font-size: 10pt; }}
@@ -49,24 +119,38 @@ QLineEdit:focus, QComboBox:focus, QDoubleSpinBox:focus, QPlainTextEdit:focus {{
 }}
 QComboBox::drop-down {{ border: none; width: 20px; }}
 QComboBox QAbstractItemView {{
-    background: {FIELD}; border: 1px solid {BORDER}; selection-background-color: {ACCENT};
+    background: {FIELD}; border: 1px solid {BORDER};
+    selection-background-color: #c4d9eb; selection-color: {TEXT};
+    show-decoration-selected: 0;
+}}
+QComboBox::item:selected, QComboBox QAbstractItemView::item:selected,
+QComboBox QAbstractItemView::item:selected:active,
+QComboBox QAbstractItemView::item:selected:!active {{
+    background: #c4d9eb; color: {TEXT};
+}}
+QComboBox QAbstractItemView::indicator {{
+    image: none; width: 0px; height: 0px;
+}}
+QComboBox QAbstractItemView::indicator:checked,
+QComboBox QAbstractItemView::indicator:unchecked {{
+    image: none; width: 0px; height: 0px;
 }}
 
 QPushButton {{
     background: {FIELD}; border: 1px solid {BORDER}; border-radius: 6px;
     padding: 7px 14px; color: {TEXT};
 }}
-QPushButton:hover {{ background: #3a3d44; }}
-QPushButton:pressed {{ background: #2a2c31; }}
+QPushButton:hover {{ background: #f0f3f6; }}
+QPushButton:pressed {{ background: #e6ebf0; }}
 QPushButton#primary {{
     background: {ACCENT}; border: 1px solid {ACCENT}; color: white;
     font-weight: 600; letter-spacing: 1px; padding: 9px;
 }}
-QPushButton#primary:hover {{ background: #5d98f7; }}
+QPushButton#primary:hover {{ background: #3b82f6; }}
 QPushButton#success {{
-    background: {SUCCESS}; border: 1px solid {SUCCESS}; color: #0d1117; font-weight: 600;
+    background: {SUCCESS}; border: 1px solid {SUCCESS}; color: white; font-weight: 600;
 }}
-QPushButton#success:hover {{ background: #56c965; }}
+QPushButton#success:hover {{ background: #2da44e; }}
 
 QToolButton {{
     background: transparent; border: 1px solid transparent; border-radius: 6px;
@@ -79,9 +163,9 @@ QListWidget#projectList::item {{
     background: {SURFACE}; border: 1px solid {BORDER}; border-radius: 8px;
     padding: 10px 12px; margin: 3px 0; color: {TEXT};
 }}
-QListWidget#projectList::item:hover {{ border: 1px solid #5a5e66; }}
+QListWidget#projectList::item:hover {{ border: 1px solid #afb8c1; }}
 QListWidget#projectList::item:selected {{
-    background: #2f3847; border: 1px solid {ACCENT}; color: {TEXT};
+    background: #dbeafe; border: 1px solid {ACCENT}; color: {TEXT};
 }}
 
 QLabel#muted {{ color: {TEXT_MUTED}; }}
@@ -89,7 +173,7 @@ QLabel#pageTitle {{ color: {TEXT}; font-size: 18pt; font-weight: 700; }}
 QPushButton#link {{
     background: transparent; border: none; color: {ACCENT}; padding: 2px 4px;
 }}
-QPushButton#link:hover {{ color: #7aa9f8; text-decoration: underline; }}
+QPushButton#link:hover {{ color: #1d4ed8; text-decoration: underline; }}
 QScrollArea {{ background: transparent; }}
 QScrollArea > QWidget > QWidget {{ background: transparent; }}
 QLabel#sectionTitle {{
@@ -97,9 +181,11 @@ QLabel#sectionTitle {{
     padding: 4px 6px; border-bottom: 1px solid {BORDER};
 }}
 QFrame#propRow {{ border-radius: 4px; }}
-QFrame#propRow:hover {{ background: {FIELD}; }}
+QFrame#propRow:hover {{ background: #eaf2ff; }}
 QLabel#value {{ color: {TEXT}; font-weight: 600; }}
 QLabel#ncrd {{ color: {TEXT}; font-weight: 700; font-size: 11pt; }}
+QLabel#materialProperty {{ color: {TEXT}; font-size: 10pt; font-weight: 400; }}
+QLabel#resultText {{ font-size: 12pt; }}
 
 QFrame#loadHeader {{
     background: {FIELD}; border: 1px solid {BORDER}; border-radius: 6px;
@@ -131,8 +217,8 @@ def apply_theme(app: QApplication) -> None:
     palette.setColor(QPalette.Text, QColor(TEXT))
     palette.setColor(QPalette.Button, QColor(FIELD))
     palette.setColor(QPalette.ButtonText, QColor(TEXT))
-    palette.setColor(QPalette.Highlight, QColor(ACCENT))
-    palette.setColor(QPalette.HighlightedText, QColor("white"))
+    palette.setColor(QPalette.Highlight, QColor("#c4d9eb"))
+    palette.setColor(QPalette.HighlightedText, QColor(TEXT))
     palette.setColor(QPalette.ToolTipBase, QColor(SURFACE))
     palette.setColor(QPalette.ToolTipText, QColor(TEXT))
     palette.setColor(QPalette.PlaceholderText, QColor(TEXT_MUTED))
