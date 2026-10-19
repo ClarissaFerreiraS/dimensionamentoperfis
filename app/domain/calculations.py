@@ -23,7 +23,7 @@ GAMA_A1 = 1.10
 def calcular_pilar(profile: Profile, steel: SteelType, loads: LoadCase) -> DesignResult:
     """Dimensiona um pilar à compressão axial, retornando todos os intermediários.
 
-    Réplica fiel das fórmulas de ``CodigocomPDF.py`` para os dois casos
+    Fórmulas de ``CodigocomPDF.py`` para os dois casos
     (laminado/soldado). A resistência e o limite de esbeltez são retornados
     como verificações independentes.
     """
@@ -114,7 +114,7 @@ def calcular_pilar(profile: Profile, steel: SteelType, loads: LoadCase) -> Desig
     perda_alma = (altura_ref_alma - bef_alma) * tw
     a_ef_cm2 = ((ag * 100) - perda_mesas - perda_alma) / 100
 
-    # --- 3. Resistência e veredito -----------------------------------------------
+    # --- 3. Resistência e verificação -----------------------------------------------
     nc_rd = (chi * a_ef_cm2 * (fy / 10)) / GAMA_A1
     ncsd = loads.ncsd_kn
     atende_resistencia = nc_rd >= ncsd

@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app import __version__
 from app.domain.models import ProfileFamily
 from app.repositories import ProjectRepository
 from app.ui.catalog_editor import CatalogEditor
@@ -251,7 +252,9 @@ class _ProjectsTab(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self, conn: sqlite3.Connection, db_path: str | Path) -> None:
         super().__init__()
-        self.setWindowTitle("Dimensionamento de Perfis Metálicos - ABNT NBR 8800:2024")
+        self.setWindowTitle(
+            f"Dimensionamento de Perfis Metálicos - ABNT NBR 8800:2024 (v{__version__})"
+        )
         self.setWindowIcon(_app_icon())
         self.resize(1280, 820)
 
