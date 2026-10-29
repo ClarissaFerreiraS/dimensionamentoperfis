@@ -25,6 +25,9 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
+      - name: Testar interface e cálculos
+        run: python -m pytest -q
+
       - name: Popular catálogo a partir da planilha
         run: python -m app.importers.excel_importer "ELU Compressão.xlsx" catalogo.db
 
