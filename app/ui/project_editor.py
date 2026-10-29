@@ -63,7 +63,7 @@ def _spinbox(minimum: float, maximum: float, decimals: int, valor: float, sufixo
     box.setSuffix(sufixo)
     box.setButtonSymbols(QDoubleSpinBox.NoButtons)
     box.setAlignment(Qt.AlignRight)
-    box.setMinimumWidth(70)
+    box.setMinimumWidth(max(90, box.fontMetrics().horizontalAdvance(box.text()) + 24))
     return box
 
 
@@ -125,8 +125,6 @@ class ProjectEditor(QWidget):
         self.aco_combo.currentIndexChanged.connect(self._on_aco_changed)
         self.ea_spin = _spinbox(1.0, 1000.0, 1, 200.0, " GPa")
         self.ga_spin = _spinbox(1.0, 1000.0, 1, 77.0, " GPa")
-        self.ea_spin.setMinimumWidth(85)
-        self.ga_spin.setMinimumWidth(85)
         self.fy_label = _label("—", "value")
         label_ea = _label("Eₐ", "materialProperty")
         label_ga = _label("Gₐ", "materialProperty")

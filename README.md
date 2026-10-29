@@ -1,6 +1,6 @@
 # Dimensionamento de Perfis Metálicos (Soldados e Laminados) - ABNT NBR 8800:2024
 
-Versão atual: **0.1.3**
+Versão atual: **0.1.4**
 
 Aplicativo desktop para o dimensionamento à compressão de perfis de aço,
 conforme a **ABNT NBR 8800:2024**.
