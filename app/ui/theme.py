@@ -112,8 +112,9 @@ QGroupBox::title {{
 
 QLineEdit, QComboBox, QDoubleSpinBox, QPlainTextEdit {{
     background: {FIELD}; border: 1px solid {BORDER}; border-radius: 5px;
-    padding: 4px 6px; color: {TEXT}; selection-background-color: {ACCENT};
-}}
+    padding: 4px 6px;     color: {TEXT};
+        selection-background-color: #c4d9eb; selection-color: {TEXT};
+    }}
 QLineEdit:focus, QComboBox:focus, QDoubleSpinBox:focus, QPlainTextEdit:focus {{
     border: 1px solid {ACCENT};
 }}

@@ -23,6 +23,7 @@ _DIMENSOES = (
     ("d'", "Altura da parte plana da alma (sem os raios)", "mm", lambda p: p.d_linha_mm),
 )
 _RAIO = ("r", "Raio de concordância mesa/alma", "mm", lambda p: p.raio_concordancia_mm)
+_DESCRICAO_D_LINHA = _DIMENSOES[-1]
 _SOLDA = ("ec", "Dimensão do detalhe da solda mesa/alma", "mm", lambda p: p.ec_mm)
 
 _PROPRIEDADES = (
@@ -95,10 +96,18 @@ class ProfilePropertiesPanel(QWidget):
             self._secoes.addWidget(vazio)
             return
 
-        extra = _RAIO if profile.family == ProfileFamily.LAMINADO else _SOLDA
-        dimensoes = (*_DIMENSOES, extra)
+        # Só entram em "Dimensões" as grandezas que têm cota no desenho; as demais
+        # ficam em "Propriedades geométricas", sem destaque.
+        if profile.family == ProfileFamily.LAMINADO:
+            dimensoes = _DIMENSOES
+            adicionais = (_RAIO,)
+        else:
+            dimensoes = tuple(d for d in _DIMENSOES if d[0] != "d'")
+            adicionais = (_DESCRICAO_D_LINHA, _SOLDA)
         self._secoes.addWidget(self._secao("Dimensões", dimensoes, profile, destacavel=True))
-        self._secoes.addWidget(self._secao("Propriedades geométricas", _PROPRIEDADES, profile, destacavel=False))
+        self._secoes.addWidget(
+            self._secao("Propriedades geométricas", (*_PROPRIEDADES, *adicionais), profile, destacavel=False)
+        )
         self._secoes.addStretch(1)
 
     def _secao(self, titulo: str, linhas, profile: Profile, destacavel: bool) -> QWidget:
