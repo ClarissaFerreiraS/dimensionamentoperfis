@@ -72,9 +72,14 @@ class _RelatorioPDF(FPDF):
                 self.add_font(_FONTE_SIMBOLOS, "B", str(_CAMINHO_FONTE_SIMBOLOS_NEGRITO), uni=True)
 
     def header(self) -> None:
-        self.set_font("Helvetica", "B", 11)
         self.set_fill_color(240, 243, 246)
-        self.cell(0, 8, "MEMORIAL DE CÁLCULO ESTRUTURAL - COMPRESSÃO PURA", border=1, ln=1, align="C", fill=True)
+        self.rect(10, 10, 190, 8, style="DF")
+        logo_path = Path(__file__).resolve().parents[1] / "ui" / "assets" / "structdim_logo.png"
+        self.image(str(logo_path), x=11, y=10.5, w=7)
+        self.set_xy(18, 10)
+        self.set_font("Helvetica", "B", 11)
+        self.cell(182, 8, "MEMORIAL DE CÁLCULO ESTRUTURAL - COMPRESSÃO PURA", align="C")
+        self.set_xy(10, 18)
         self.set_font("Helvetica", "", 9)
         self.cell(0, 5, f"Autor(a) responsável: {self._autor}", border="LR", ln=1)
         self.cell(0, 5, f"Norma de referência: {_NORMA_BASE}", border="LRB", ln=1)
