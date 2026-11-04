@@ -188,8 +188,8 @@ QLabel#aboutStepNumber {{
     background: #eaf2ff; border-radius: 20px; color: {ACCENT};
     font-weight: 700; font-size: 11pt;
 }}
-QLabel#aboutStepTitle {{ color: {TEXT}; font-size: 12pt; font-weight: 600; }}
-QLabel#aboutStepDescription {{ color: {TEXT_MUTED}; font-size: 11pt; }}
+QLabel#aboutStepTitle {{ color: {TEXT}; font-size: 13pt; font-weight: 600; }}
+QLabel#aboutStepDescription {{ color: {TEXT_MUTED}; font-size: 12pt; }}
 QFrame#aboutFooter {{
     background: #eaf2ff; border: 1px solid #d5e4fa; border-radius: 8px;
 }}

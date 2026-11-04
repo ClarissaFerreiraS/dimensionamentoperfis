@@ -8,7 +8,7 @@ from app.ui.main_window import MainWindow
 from app.ui.theme import apply_theme
 
 
-def test_about_tab_is_first_and_button_opens_projects():
+def test_about_tab_is_first_and_has_only_the_notice():
     app = QApplication.instance() or QApplication([])
     apply_theme(app)
     conn = open_database(":memory:")
@@ -38,11 +38,7 @@ def test_about_tab_is_first_and_button_opens_projects():
     note = about_tab.findChild(QLabel, "aboutNote")
     assert "Atenção:" in note.text()
     assert "ferramenta de finalidade educacional" in note.text()
-    start_button = about_tab.findChild(QPushButton, "primary")
-    assert start_button is not None
-    assert start_button.text() == "Começar agora →"
-    start_button.click()
-    assert tabs.currentWidget() is tabs.widget(1)
+    assert not about_tab.findChildren(QPushButton)
 
     window.close()
     conn.close()

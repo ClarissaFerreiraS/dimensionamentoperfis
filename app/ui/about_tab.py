@@ -4,13 +4,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import Signal, Qt
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QLinearGradient, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
-    QPushButton,
     QScrollArea,
     QSizePolicy,
     QVBoxLayout,
@@ -76,8 +75,6 @@ class _StepCard(QFrame):
 
 
 class AboutTab(QWidget):
-    start_requested = Signal()
-
     def __init__(self) -> None:
         super().__init__()
         scroll = QScrollArea()
@@ -167,10 +164,8 @@ class AboutTab(QWidget):
 
         footer_panel = QFrame()
         footer_panel.setObjectName("aboutFooter")
-        footer_panel.setMinimumHeight(126)
         footer = QVBoxLayout(footer_panel)
-        footer.setContentsMargins(16, 14, 16, 12)
-        footer.setSpacing(8)
+        footer.setContentsMargins(20, 14, 20, 14)
 
         note = QLabel(
             "<b>Atenção:</b> ferramenta de finalidade educacional. Os "
@@ -179,14 +174,7 @@ class AboutTab(QWidget):
         )
         note.setObjectName("aboutNote")
         note.setWordWrap(True)
-        footer.addWidget(note, 1)
-
-        start_button = QPushButton("Começar agora →")
-        start_button.setObjectName("primary")
-        start_button.setMinimumSize(180, 46)
-        start_button.setCursor(Qt.PointingHandCursor)
-        start_button.clicked.connect(self.start_requested)
-        footer.addWidget(start_button, 0, Qt.AlignRight | Qt.AlignVCenter)
+        footer.addWidget(note)
         layout.addWidget(footer_panel)
 
         scroll.setWidget(content)

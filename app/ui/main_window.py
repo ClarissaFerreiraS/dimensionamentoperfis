@@ -252,7 +252,6 @@ class MainWindow(QMainWindow):
         projetos.editor.details_requested.connect(lambda: abas.setCurrentWidget(detalhes))
         detalhes.set_profile(projetos.editor.profile)
         apresentacao = AboutTab()
-        apresentacao.start_requested.connect(lambda: abas.setCurrentWidget(projetos))
         abas.addTab(apresentacao, "Conheça o StructDim")
         abas.addTab(projetos, "Projetos")
         abas.addTab(detalhes, "Detalhes do Perfil")
