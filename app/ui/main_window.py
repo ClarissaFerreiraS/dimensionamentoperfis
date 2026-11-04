@@ -1,4 +1,4 @@
-"""Janela principal: abas Projetos / Catálogo de Perfis / Tipos de Aço."""
+"""Janela principal: apresentação, projetos, detalhes e catálogos."""
 
 from __future__ import annotations
 
@@ -21,9 +21,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from app import __version__
 from app.domain.models import ProfileFamily
 from app.repositories import ProjectRepository
+from app.ui.about_tab import AboutTab
 from app.ui.catalog_editor import CatalogEditor
 from app.ui.profile_details import ProfileDetailsTab
 from app.ui.project_editor import ProjectEditor
@@ -32,25 +32,10 @@ from app.ui import theme
 
 
 def _app_icon() -> QIcon:
-    pixmap = QPixmap(64, 64)
-    pixmap.fill(Qt.transparent)
-
-    painter = QPainter(pixmap)
-    painter.setRenderHint(QPainter.Antialiasing)
-    painter.setPen(Qt.NoPen)
-    painter.setBrush(QColor("#2f6f9f"))
-    painter.drawRoundedRect(QRectF(3, 3, 58, 58), 12, 12)
-
-    painter.setBrush(QColor("#ffffff"))
-    painter.drawRoundedRect(QRectF(12, 12, 40, 9), 2, 2)
-    painter.drawRoundedRect(QRectF(27, 19, 10, 27), 2, 2)
-    painter.drawRoundedRect(QRectF(12, 43, 40, 9), 2, 2)
-
-    painter.setPen(QPen(QColor("#f0a04b"), 3))
-    painter.drawLine(14, 56, 50, 56)
-    painter.drawLine(14, 52, 14, 60)
-    painter.drawLine(50, 52, 50, 60)
-    painter.end()
+    icon_path = Path(__file__).resolve().parent / "assets" / "structdim_icon.png"
+    pixmap = QPixmap(str(icon_path))
+    if pixmap.isNull():
+        raise FileNotFoundError(f"Ícone do StructDim não encontrado: {icon_path}")
     return QIcon(pixmap)
 
 
@@ -253,7 +238,7 @@ class MainWindow(QMainWindow):
     def __init__(self, conn: sqlite3.Connection, db_path: str | Path) -> None:
         super().__init__()
         self.setWindowTitle(
-            f"Dimensionamento de Perfis Metálicos - ABNT NBR 8800:2024 (v{__version__})"
+            "StructDim - Dimensionamento de Perfis de Aço (ABNT NBR 8800:2024)"
         )
         self.setWindowIcon(_app_icon())
         self.resize(1280, 820)
@@ -261,10 +246,14 @@ class MainWindow(QMainWindow):
         abas = QTabWidget()
         abas.setDocumentMode(True)
         projetos = _ProjectsTab(conn)
+        projetos.setObjectName("projectsTab")
         detalhes = ProfileDetailsTab()
         projetos.editor.profile_changed.connect(detalhes.set_profile)
         projetos.editor.details_requested.connect(lambda: abas.setCurrentWidget(detalhes))
         detalhes.set_profile(projetos.editor.profile)
+        apresentacao = AboutTab()
+        apresentacao.start_requested.connect(lambda: abas.setCurrentWidget(projetos))
+        abas.addTab(apresentacao, "Conheça o StructDim")
         abas.addTab(projetos, "Projetos")
         abas.addTab(detalhes, "Detalhes do Perfil")
         catalog_editor = CatalogEditor(conn, db_path)

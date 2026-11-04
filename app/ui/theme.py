@@ -171,6 +171,29 @@ QListWidget#projectList::item:selected {{
 
 QLabel#muted {{ color: {TEXT_MUTED}; }}
 QLabel#pageTitle {{ color: {TEXT}; font-size: 18pt; font-weight: 700; }}
+QLabel#aboutEyebrow {{
+    color: {ACCENT}; font-size: 9pt; font-weight: 700; letter-spacing: 1.5px;
+}}
+QLabel#aboutTitle {{ color: {TEXT}; font-size: 23pt; font-weight: 700; }}
+QLabel#aboutIntro {{ color: {TEXT}; font-size: 11pt; }}
+QFrame#aboutHero {{
+    background: {SURFACE}; border: 1px solid {BORDER}; border-radius: 8px;
+}}
+QFrame#aboutDivider {{ color: {BORDER}; }}
+QLabel#aboutSectionTitle {{ color: {TEXT}; font-size: 15pt; font-weight: 700; }}
+QFrame#aboutStep {{
+    background: {SURFACE}; border: 1px solid {BORDER}; border-radius: 8px;
+}}
+QLabel#aboutStepNumber {{
+    background: #eaf2ff; border-radius: 20px; color: {ACCENT};
+    font-weight: 700; font-size: 11pt;
+}}
+QLabel#aboutStepTitle {{ color: {TEXT}; font-size: 12pt; font-weight: 600; }}
+QLabel#aboutStepDescription {{ color: {TEXT_MUTED}; font-size: 11pt; }}
+QFrame#aboutFooter {{
+    background: #eaf2ff; border: 1px solid #d5e4fa; border-radius: 8px;
+}}
+QLabel#aboutNote {{ color: #334e70; font-size: 11pt; }}
 QPushButton#link {{
     background: transparent; border: none; color: {ACCENT}; padding: 2px 4px;
 }}

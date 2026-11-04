@@ -24,6 +24,7 @@ busca acompanhar os critérios da norma vigente e fornecer cálculos alinhados
 
 ## Recursos
 
+- Aba inicial apresenta o propósito educacional do StructDim e orienta o primeiro uso.
 - Dimensionamento de perfis de aço submetidos à compressão axial.
 - Catálogo de perfis **laminados (W/HP)** e **soldados (CS)**.
 - Catálogo de tipos de aço com propriedades `fy` e `fu`.

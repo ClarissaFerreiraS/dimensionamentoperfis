@@ -17,7 +17,21 @@ a = Analysis(
     [str(_ROOT / "run_app.py")],
     pathex=[str(_ROOT)],
     binaries=[],
-    datas=[(str(_ROOT / "app" / "db" / "schema.sql"), "app/db")],
+    datas=[
+        (str(_ROOT / "app" / "db" / "schema.sql"), "app/db"),
+        (
+            str(_ROOT / "app" / "ui" / "assets" / "structdim_perfis_aco.png"),
+            "app/ui/assets",
+        ),
+        (
+            str(_ROOT / "app" / "ui" / "assets" / "structdim_logo.png"),
+            "app/ui/assets",
+        ),
+        (
+            str(_ROOT / "app" / "ui" / "assets" / "structdim_icon.png"),
+            "app/ui/assets",
+        ),
+    ],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

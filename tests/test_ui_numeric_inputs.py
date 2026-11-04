@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pytest
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QWidget
 
 from app.db.database import open_database
 from app.ui.main_window import MainWindow
@@ -19,7 +19,7 @@ def project_editor():
     window.resize(1228, 768)
     window.show()
     app.processEvents()
-    editor = window.centralWidget().widget(0).editor
+    editor = window.findChild(QWidget, "projectsTab").editor
 
     yield editor
 
