@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor, QLinearGradient, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
+    QPushButton,
     QScrollArea,
     QSizePolicy,
     QVBoxLayout,
@@ -75,6 +76,8 @@ class _StepCard(QFrame):
 
 
 class AboutTab(QWidget):
+    start_requested = Signal()
+
     def __init__(self) -> None:
         super().__init__()
         scroll = QScrollArea()
@@ -176,6 +179,16 @@ class AboutTab(QWidget):
         note.setWordWrap(True)
         footer.addWidget(note)
         layout.addWidget(footer_panel)
+
+        start_row = QHBoxLayout()
+        start_row.addStretch(1)
+        self.start_button = QPushButton("Iniciar Projeto  →")
+        self.start_button.setObjectName("primary")
+        self.start_button.setCursor(Qt.PointingHandCursor)
+        self.start_button.setFocusPolicy(Qt.NoFocus)
+        self.start_button.clicked.connect(self.start_requested)
+        start_row.addWidget(self.start_button)
+        layout.addLayout(start_row)
 
         scroll.setWidget(content)
         outer_layout = QVBoxLayout(self)

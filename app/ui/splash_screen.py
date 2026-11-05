@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import QRect, Qt, QTimer
+from PySide6.QtCore import QRect, Qt
 from PySide6.QtGui import QColor, QFont, QFontMetricsF, QLinearGradient, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import QWidget
 
@@ -28,27 +28,14 @@ class SplashScreen(QWidget):
         super().__init__(None, Qt.Window)
         self._logo = _load_image(_LOGO_IMAGE)
         self._profile = _load_image(_PROFILE_IMAGE)
-        self._progress_offset = 0
-        self._progress_direction = 1
+        self._progress = 0
+        self._status = "Preparando o sistema..."
         self.setFixedSize(_WIDTH, _HEIGHT)
         self.setWindowTitle("StructDim")
 
-        self._timer = QTimer(self)
-        self._timer.setInterval(30)
-        self._timer.timeout.connect(self._animate_progress)
-
-    def showEvent(self, event) -> None:
-        super().showEvent(event)
-        self._timer.start()
-
-    def closeEvent(self, event) -> None:
-        self._timer.stop()
-        super().closeEvent(event)
-
-    def _animate_progress(self) -> None:
-        self._progress_offset += 5 * self._progress_direction
-        if self._progress_offset >= 390 or self._progress_offset <= 0:
-            self._progress_direction *= -1
+    def set_progress(self, value: int, status: str) -> None:
+        self._progress = max(0, min(value, 100))
+        self._status = status
         self.update()
 
     def paintEvent(self, event) -> None:
@@ -132,21 +119,18 @@ class SplashScreen(QWidget):
         painter.drawText(
             QRect(70, 482, 660, 30),
             Qt.AlignCenter,
-            "Iniciando o sistema...",
+            self._status,
         )
 
         track = QRect(100, 530, 600, 14)
         painter.setPen(Qt.NoPen)
         painter.setBrush(QColor(185, 210, 232, 48))
         painter.drawRoundedRect(track, 7, 7)
-        segment = QRect(
-            track.x() + self._progress_offset,
-            track.y(),
-            190,
-            track.height(),
-        )
-        progress = QLinearGradient(segment.topLeft(), segment.topRight())
-        progress.setColorAt(0, QColor("#4c91c5"))
-        progress.setColorAt(1, QColor("#80c6f0"))
-        painter.setBrush(progress)
-        painter.drawRoundedRect(segment, 7, 7)
+        fill_width = round(track.width() * self._progress / 100)
+        if fill_width:
+            fill = QRect(track.x(), track.y(), fill_width, track.height())
+            progress = QLinearGradient(fill.topLeft(), fill.topRight())
+            progress.setColorAt(0, QColor("#4c91c5"))
+            progress.setColorAt(1, QColor("#80c6f0"))
+            painter.setBrush(progress)
+            painter.drawRoundedRect(fill, 7, 7)

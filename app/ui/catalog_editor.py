@@ -8,6 +8,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QTableView,
     QTabWidget,
     QVBoxLayout,
@@ -105,6 +106,7 @@ class _ProfileFamilyPanel(QWidget):
         table = QTableView()
         table.setModel(self._model)
         table.horizontalHeader().setStretchLastSection(True)
+        table.setHorizontalScrollMode(QAbstractItemView.ScrollPerPixel)
         self._table = table
 
         layout = QVBoxLayout(self)

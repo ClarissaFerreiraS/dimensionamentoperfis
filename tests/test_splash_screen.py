@@ -17,7 +17,13 @@ def test_splash_screen_displays_structdim_branding():
     assert splash.windowType() == Qt.Window
     assert splash._logo.width() >= 300
     assert splash._profile.width() >= 1500
-    assert splash._timer.isActive()
+    assert splash._progress == 0
+
+    splash.set_progress(55, "Carregando a interface...")
+    assert splash._progress == 55
+    assert splash._status == "Carregando a interface..."
+
+    splash.set_progress(120, "Sistema pronto.")
+    assert splash._progress == 100
 
     splash.close()
-    assert not splash._timer.isActive()

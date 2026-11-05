@@ -198,8 +198,8 @@ QPushButton#link {{
     background: transparent; border: none; color: {ACCENT}; padding: 2px 4px;
 }}
 QPushButton#link:hover {{ color: #1d4ed8; text-decoration: underline; }}
-QScrollArea {{ background: transparent; }}
-QScrollArea > QWidget > QWidget {{ background: transparent; }}
+QScrollArea#aboutScroll {{ background: transparent; }}
+QScrollArea#aboutScroll > QWidget > QWidget {{ background: transparent; }}
 QLabel#sectionTitle {{
     color: {TEXT_MUTED}; font-size: 8pt; font-weight: 600; letter-spacing: 1px;
     padding: 4px 6px; border-bottom: 1px solid {BORDER};
@@ -209,7 +209,9 @@ QFrame#propRow:hover {{ background: #eaf2ff; }}
 QLabel#value {{ color: {TEXT}; font-weight: 600; }}
 QLabel#ncrd {{ color: {TEXT}; font-weight: 700; font-size: 11pt; }}
 QLabel#materialProperty {{ color: {TEXT}; font-size: 10pt; font-weight: 400; }}
-QLabel#resultText {{ font-size: 12pt; }}
+QLabel#resultText {{
+    font-size: 12pt; background: {SURFACE}; border: none;
+}}
 
 QFrame#loadHeader {{
     background: {FIELD}; border: 1px solid {BORDER}; border-radius: 6px;

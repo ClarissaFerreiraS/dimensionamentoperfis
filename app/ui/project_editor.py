@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMessageBox,
     QPushButton,
+    QScrollArea,
     QSizePolicy,
     QVBoxLayout,
     QWidget,
@@ -37,7 +38,10 @@ from app.repositories import ProfileRepository, ProjectRepository, SteelTypeRepo
 from app.ui import theme
 from app.ui.section_canvas import SectionCanvas
 
-_MSG_INICIAL = "Preencha os dados e clique em <b>CALCULAR</b>."
+_MSG_INICIAL = (
+    "<span style='font-size: 13pt;'>"
+    "Clique em <b>CALCULAR</b> para obter os resultados.</span>"
+)
 _MSG_ALTERADO = "Dados alterados — clique em <b>CALCULAR</b> para atualizar o resultado."
 
 
@@ -263,14 +267,23 @@ class ProjectEditor(QWidget):
         return box
 
     def _build_resultado_box(self) -> QGroupBox:
-        self.resultado_label = QLabel(_MSG_INICIAL)
+        self.resultado_label = QLabel()
         self.resultado_label.setObjectName("resultText")
-        self.resultado_label.setWordWrap(True)
-        self.resultado_label.setTextFormat(Qt.RichText)
-        self.resultado_label.setMinimumWidth(0)
-        self.resultado_label.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
-        self.resultado_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-        self.resultado_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.resultado_label.setWordWrap(False)
+        self.resultado_label.setMargin(8)
+        self.resultado_label.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.resultado_label.setText(_MSG_INICIAL)
+
+        resultado_scroll = QScrollArea()
+        resultado_scroll.setObjectName("resultScroll")
+        resultado_scroll.setFrameShape(QFrame.NoFrame)
+        resultado_scroll.setContentsMargins(6, 6, 6, 6)
+        resultado_scroll.setWidgetResizable(False)
+        resultado_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        resultado_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        resultado_scroll.setWidget(self.resultado_label)
+        resultado_scroll.viewport().setStyleSheet(f"background-color: {theme.SURFACE};")
+
         btn_pdf = QPushButton("GERAR MEMORIAL PDF")
         btn_pdf.setObjectName("success")
         btn_pdf.setCursor(Qt.PointingHandCursor)
@@ -283,7 +296,7 @@ class ProjectEditor(QWidget):
         box.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Expanding)
         layout = QVBoxLayout(box)
         layout.setSpacing(4)
-        layout.addWidget(self.resultado_label, 1)
+        layout.addWidget(resultado_scroll, 1)
         layout.addSpacing(6)
         layout.addLayout(rodape)
         return box
@@ -349,6 +362,7 @@ class ProjectEditor(QWidget):
         self.ncrd_label.setText("—")
         self.r0_label.setText("—")
         self.resultado_label.setText(mensagem)
+        self.resultado_label.adjustSize()
 
     @property
     def profile(self) -> Profile | None:
@@ -495,6 +509,7 @@ class ProjectEditor(QWidget):
         )
         self.ncrd_label.setText(f"{r.nc_rd_kn:.2f}")
         self.r0_label.setText(f"{r.r0_cm:.2f} cm")
+        self.resultado_label.adjustSize()
 
     def salvar(self) -> None:
         nome = self.nome_edit.text().strip()

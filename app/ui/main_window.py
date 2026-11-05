@@ -245,6 +245,7 @@ class MainWindow(QMainWindow):
 
         abas = QTabWidget()
         abas.setDocumentMode(True)
+        abas.tabBar().setFocusPolicy(Qt.NoFocus)
         projetos = _ProjectsTab(conn)
         projetos.setObjectName("projectsTab")
         detalhes = ProfileDetailsTab()
@@ -253,6 +254,7 @@ class MainWindow(QMainWindow):
         detalhes.set_profile(projetos.editor.profile)
         apresentacao = AboutTab()
         abas.addTab(apresentacao, "Conheça o StructDim")
+        apresentacao.start_requested.connect(lambda: abas.setCurrentWidget(projetos))
         abas.addTab(projetos, "Projetos")
         abas.addTab(detalhes, "Detalhes do Perfil")
         catalog_editor = CatalogEditor(conn, db_path)

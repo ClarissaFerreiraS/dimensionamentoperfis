@@ -38,7 +38,10 @@ def test_about_tab_is_first_and_has_only_the_notice():
     note = about_tab.findChild(QLabel, "aboutNote")
     assert "Atenção:" in note.text()
     assert "ferramenta de finalidade educacional" in note.text()
-    assert not about_tab.findChildren(QPushButton)
+    buttons = about_tab.findChildren(QPushButton)
+    assert [b.text() for b in buttons] == ["Iniciar Projeto  →"]
+    buttons[0].click()
+    assert tabs.currentIndex() == 1
 
     window.close()
     conn.close()
