@@ -25,6 +25,11 @@ from pathlib import Path
 
 from fpdf import FPDF
 
+from app.domain.calculation_explanation import (
+    EXPLANATION_NOTE,
+    CalculationStep,
+    build_calculation_steps,
+)
 from app.domain.drawing import Dimension, Polyline, SectionScene, build_section_scene
 from app.domain.models import DesignResult, LoadCase, Profile, ProfileFamily, SteelType
 
@@ -67,9 +72,9 @@ class _RelatorioPDF(FPDF):
         self._autor = autor
         self._fonte_simbolos_disponivel = _CAMINHO_FONTE_SIMBOLOS.exists()
         if self._fonte_simbolos_disponivel:
-            self.add_font(_FONTE_SIMBOLOS, "", str(_CAMINHO_FONTE_SIMBOLOS), uni=True)
+            self.add_font(_FONTE_SIMBOLOS, "", str(_CAMINHO_FONTE_SIMBOLOS))
             if _CAMINHO_FONTE_SIMBOLOS_NEGRITO.exists():
-                self.add_font(_FONTE_SIMBOLOS, "B", str(_CAMINHO_FONTE_SIMBOLOS_NEGRITO), uni=True)
+                self.add_font(_FONTE_SIMBOLOS, "B", str(_CAMINHO_FONTE_SIMBOLOS_NEGRITO))
 
     def header(self) -> None:
         self.set_fill_color(240, 243, 246)
@@ -81,34 +86,34 @@ class _RelatorioPDF(FPDF):
         self.cell(182, 8, "MEMORIAL DE CÁLCULO ESTRUTURAL - COMPRESSÃO PURA", align="C")
         self.set_xy(10, 18)
         self.set_font("Helvetica", "", 9)
-        self.cell(0, 5, f"Autor(a) responsável: {self._autor}", border="LR", ln=1)
-        self.cell(0, 5, f"Norma de referência: {_NORMA_BASE}", border="LRB", ln=1)
+        self.cell(0, 5, f"Autor(a) responsável: {self._autor}", border="LR", new_x="LMARGIN", new_y="NEXT")
+        self.cell(0, 5, f"Norma de referência: {_NORMA_BASE}", border="LRB", new_x="LMARGIN", new_y="NEXT")
         self.ln(3)
 
     def footer(self) -> None:
         self.set_y(-15)
         self.set_font("Helvetica", "I", 8)
-        self.cell(0, 10, f"Pagina {self.page_no()}", 0, 0, "C")
+        self.cell(0, 10, f"Página {self.page_no()}", align="C")
 
 
 def _add_secao(pdf: FPDF, titulo: str) -> None:
     pdf.ln(2)
     pdf.set_font("Helvetica", "B", 10)
     pdf.set_text_color(20, 40, 100)
-    pdf.cell(0, 5, titulo, border="B", ln=1)
+    pdf.cell(0, 5, titulo, border="B", new_x="LMARGIN", new_y="NEXT")
     pdf.set_text_color(0, 0, 0)
     pdf.ln(1)
 
 
 def _add_linha(pdf: FPDF, texto: str) -> None:
     pdf.set_font("Helvetica", "", 9)
-    pdf.cell(0, 5, texto, ln=1)
+    pdf.cell(0, 5, texto, new_x="LMARGIN", new_y="NEXT")
 
 
 def _add_linha_rotulada(pdf: FPDF, rotulo: str, valor: str) -> None:
     fonte = _FONTE_SIMBOLOS if getattr(pdf, "_fonte_simbolos_disponivel", False) else "Helvetica"
     pdf.set_font(fonte, "", 9)
-    pdf.cell(0, 5, f"{rotulo} {valor}", ln=1)
+    pdf.cell(0, 5, f"{rotulo} {valor}", new_x="LMARGIN", new_y="NEXT")
 
 
 def _draw_dashed_line(pdf: FPDF, x1: float, y1: float, x2: float, y2: float, dash: float, gap: float) -> None:
@@ -246,10 +251,10 @@ def _add_geometria(pdf: FPDF, profile: Profile, r: DesignResult) -> None:
     pdf.set_draw_color(190, 195, 200)
     pdf.set_line_width(0.2)
     pdf.set_font("Helvetica", "B", 8)
-    pdf.cell(30, 7, "SÍMBOLO", border="B", align="L")
-    pdf.cell(40, 7, "DIMENSÃO", border="B", align="C")
+    pdf.cell(30, 7, "DIMENSÃO", border="B", align="L")
+    pdf.cell(40, 7, "VALOR", border="B", align="C")
     pdf.cell(85, 7, "PROPRIEDADE GEOMÉTRICA", border="B", align="L")
-    pdf.cell(35, 7, "VALORES", border="B", ln=1, align="R")
+    pdf.cell(35, 7, "VALOR", border="B", new_x="LMARGIN", new_y="NEXT", align="R")
 
     linhas = [
         ("bf", f"{profile.bf_mm:.1f} mm", "Área bruta (Ag)", f"{profile.ag_cm2:.2f} cm²"),
@@ -264,13 +269,13 @@ def _add_geometria(pdf: FPDF, profile: Profile, r: DesignResult) -> None:
         pdf.cell(30, 7, dim_nome, border="B", align="L")
         pdf.cell(40, 7, dim_valor, border="B", align="C")
         pdf.cell(85, 7, prop_nome, border="B", align="L")
-        pdf.cell(35, 7, prop_valor, border="B", ln=1, align="R")
+        pdf.cell(35, 7, prop_valor, border="B", new_x="LMARGIN", new_y="NEXT", align="R")
 
     # O perfil ocupa uma área própria abaixo da tabela, centralizado na página.
     pdf.set_y(y_tabela + 55)
     pdf.set_font("Helvetica", "B", 8)
     pdf.set_x(10)
-    pdf.cell(190, 6, "SEÇÃO TRANSVERSAL COTADA", ln=1, align="C")
+    pdf.cell(190, 6, "SEÇÃO TRANSVERSAL COTADA", new_x="LMARGIN", new_y="NEXT", align="C")
     # Reserva espaço para a cota superior (tw) não invadir o título.
     y_desenho = pdf.get_y() + 4
     scene = build_section_scene(profile)
@@ -279,147 +284,119 @@ def _add_geometria(pdf: FPDF, profile: Profile, r: DesignResult) -> None:
     pdf.ln(4)
 
 
-def _add_estabilidade_global(pdf: FPDF, r: DesignResult) -> None:
-    _add_secao(pdf, "1. ESTABILIDADE GLOBAL")
-    _add_linha_rotulada(pdf, "Carga crítica de flexão em X (Nex):", f"{r.nex_kn:.2f} kN")
-    _add_linha_rotulada(pdf, "Carga crítica de flexão em Y (Ney):", f"{r.ney_kn:.2f} kN")
-    _add_linha_rotulada(pdf, "Carga crítica de torção (Nez):", f"{r.nez_kn:.2f} kN")
-    _add_linha_rotulada(pdf, "Carga crítica mínima (Ne,min):", f"{r.ne_min_kn:.2f} kN")
-    _add_linha_rotulada(pdf, "Índice de esbeltez (λ0):", f"{r.lambda0:.3f}")
-    _add_linha_rotulada(pdf, "Fator de redução (χ):", f"{r.chi:.4f}")
-
-
-def _add_limite_esbeltez(pdf: FPDF, r: DesignResult) -> None:
-    _add_secao(pdf, "2. VERIFICAÇÃO DO LIMITE DE ESBELTEZ")
-    _add_linha_rotulada(pdf, "Esbeltez em X (λx)", f": {r.esbeltez_x:.2f}")
-    _add_linha_rotulada(pdf, "Esbeltez em Y (λy)", f": {r.esbeltez_y:.2f}")
-    _add_linha_rotulada(pdf, "Esbeltez máxima (λmax)", f": {r.esbeltez_max:.2f}")
-    _add_linha_rotulada(pdf, "Limite de esbeltez", f": {r.limite_esbeltez:.0f}")
-
-    status = "ATENDE AO LIMITE DE ESBELTEZ" if r.atende_esbeltez else "NÃO ATENDE AO LIMITE DE ESBELTEZ"
-    if r.atende_esbeltez:
-        pdf.set_fill_color(220, 245, 225)
-        pdf.set_text_color(25, 105, 50)
-    else:
-        pdf.set_fill_color(255, 225, 225)
-        pdf.set_text_color(150, 35, 35)
-    pdf.set_font("Helvetica", "B", 9)
-    pdf.cell(0, 8, status, border=1, ln=1, align="C", fill=True)
-    pdf.set_text_color(0, 0, 0)
-
-
-def _add_flambagem_local(pdf: FPDF, profile: Profile, r: DesignResult) -> None:
-    # Reserva espaço para as duas colunas e evita que Mesa e Alma sejam
-    # separadas pelo page break automático do FPDF.
-    if pdf.get_y() > pdf.h - pdf.b_margin - 85:
-        pdf.add_page()
-    _add_secao(pdf, "3. FLAMBAGEM LOCAL (ÁREA EFETIVA)")
-
-    def adicionar_elemento(
-        x: float,
-        largura: float,
-        titulo: str,
-        ocorre: bool,
-        relacao: str,
-        bt: float,
-        limite_norma: float,
-        limite_efetivo: float,
-        c1: float,
-        c2: float,
-        sigma_el: float,
-        b: float,
-        bef: float,
-    ) -> float:
-        fonte = _FONTE_SIMBOLOS if getattr(pdf, "_fonte_simbolos_disponivel", False) else "Helvetica"
-        y = pdf.get_y()
-
-        def linha(texto: str, negrito: bool = False) -> None:
-            pdf.set_xy(x, y_atual[0])
-            pdf.set_font(fonte if not negrito else "Helvetica", "B" if negrito else "", 9)
-            pdf.cell(largura, 5, texto, ln=1)
-            y_atual[0] += 5
-
-        y_atual = [y]
-        linha(titulo, negrito=True)
-        linha(f"b/t → ({relacao}) = {bt:.2f}")
-        linha(f"(b/t)_lim = {limite_norma:.2f}")
-        linha(f"(b/t)_lim / √χ = {limite_efetivo:.2f}")
-        y_atual[0] += 2
-        if not ocorre:
-            linha("Não ocorre flambagem local")
-            linha(f"b = bef = {b:.2f} mm")
-            return y_atual[0]
-
-        raiz = math.sqrt(sigma_el / r.sigma_c_mpa) if r.sigma_c_mpa > 0 else 0.0
-        linha("Ocorre flambagem local")
-        linha(f"c1 = {c1:.2f}")
-        linha(f"c2 = {c2:.2f}")
-        linha(f"σel = {sigma_el:.2f} MPa")
-        linha(f"√(σel/(χfy)) = {raiz:.2f}")
-        linha(f"b = {b:.2f} mm")
-        linha(f"bef = {bef:.2f} mm")
-        return y_atual[0]
-
-    y_inicio = pdf.get_y()
-    y_mesa = adicionar_elemento(
-        10,
-        88,
-        "Mesa (elemento AL)",
-        r.ocorre_flamb_mesa,
-        "bf/(2.tf)",
-        r.bt_mesa,
-        r.limite_norma_mesa,
-        r.limite_efetivo_mesa,
-        r.c1_mesa,
-        r.c2_mesa,
-        r.sigma_el_mesa_mpa,
-        r.b_mesa_mm,
-        r.bef_mesa_mm,
-    )
-    pdf.set_y(y_inicio)
-    y_alma = adicionar_elemento(
-        108,
-        88,
-        "Alma (elemento AA)",
-        r.ocorre_flamb_alma,
-        "d'/tw" if profile.family == ProfileFamily.LAMINADO else "h/tw",
-        r.bt_alma,
-        r.limite_norma_alma,
-        r.limite_efetivo_alma,
-        r.c1_alma,
-        r.c2_alma,
-        r.sigma_el_alma_mpa,
-        r.b_alma_mm,
-        r.bef_alma_mm,
-    )
-
-    pdf.set_y(max(y_inicio, y_mesa, y_alma) + 2)
+def _add_dados_entrada(pdf: FPDF, profile: Profile, steel: SteelType, loads: LoadCase) -> None:
+    _add_secao(pdf, "DADOS DE ENTRADA")
+    familia = "Laminado" if profile.family == ProfileFamily.LAMINADO else "Soldado"
+    linhas = [
+        (
+            "Perfil",
+            f"{profile.bitola} ({familia})",
+            "Esforço solicitante (Nc,Sd)",
+            f"{loads.ncsd_kn:g} kN",
+        ),
+        (
+            "Aço",
+            f"{steel.designacao} (fy = {steel.fy_mpa:g} MPa)",
+            "Módulo de elasticidade (Ea)",
+            f"{loads.ea_gpa:g} GPa",
+        ),
+        (
+            "Flambagem em X",
+            f"Kx = {loads.kx:g}  |  Lx = {loads.lx_m:g} m",
+            "Módulo transversal (Ga)",
+            f"{loads.ga_gpa:g} GPa",
+        ),
+        (
+            "Flambagem em Y",
+            f"Ky = {loads.ky:g}  |  Ly = {loads.ly_m:g} m",
+            "Flambagem em Z (torção)",
+            f"Kz = {loads.kz:g}  |  Lz = {loads.lz_m:g} m",
+        ),
+    ]
+    pdf.set_draw_color(190, 195, 200)
+    pdf.set_line_width(0.2)
+    for rotulo_a, valor_a, rotulo_b, valor_b in linhas:
+        pdf.set_font("Helvetica", "B", 8)
+        pdf.cell(28, 7, _sanitizar_latin1(rotulo_a), border="B")
+        pdf.set_font("Helvetica", "", 8)
+        pdf.cell(67, 7, _sanitizar_latin1(valor_a), border="B")
+        pdf.set_font("Helvetica", "B", 8)
+        pdf.cell(45, 7, _sanitizar_latin1(rotulo_b), border="B")
+        pdf.set_font("Helvetica", "", 8)
+        pdf.cell(50, 7, _sanitizar_latin1(valor_b), border="B", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(2)
-    pdf.set_font("Helvetica", "B", 9)
-    pdf.cell(0, 5, f"Área bruta (Ag): {profile.ag_cm2:.2f} cm²", ln=1)
-    pdf.cell(0, 5, f"Área efetiva (Aef): {r.aef_cm2:.2f} cm²", ln=1)
 
 
 def _add_resultado(pdf: FPDF, r: DesignResult) -> None:
-    _add_secao(pdf, "4. VERIFICAÇÃO DA RESISTÊNCIA À COMPRESSÃO")
+    if pdf.get_y() > pdf.h - pdf.b_margin - 30:
+        pdf.add_page()
+    _add_secao(pdf, "RESULTADO FINAL")
     _add_linha_rotulada(pdf, "Esforço resistente (Nc,Rd)", f": {r.nc_rd_kn:.2f} kN")
     _add_linha_rotulada(pdf, "Esforço solicitante (Nc,Sd)", f": {r.ncsd_kn:.2f} kN")
-
-    resistencia_ok = r.nc_rd_kn >= r.ncsd_kn
-    comparacao = "Nc,Sd <= Nc,Rd" if resistencia_ok else "Nc,Sd > Nc,Rd"
-    status = "ATENDE AO DIMENSIONAMENTO" if r.atende_resistencia else "NÃO ATENDE AO DIMENSIONAMENTO"
     if r.atende_resistencia:
-        pdf.set_fill_color(220, 245, 225)
-        pdf.set_text_color(25, 105, 50)
+        verificacao = ": Nc,Sd ≤ Nc,Rd - ATENDE AO DIMENSIONAMENTO"
     else:
-        pdf.set_fill_color(255, 225, 225)
-        pdf.set_text_color(150, 35, 35)
-    fonte_status = _FONTE_SIMBOLOS if getattr(pdf, "_fonte_simbolos_disponivel", False) else "Helvetica"
-    pdf.set_font("Helvetica", "", 9)
-    pdf.cell(0, 6, f"Verificação: {comparacao}", border="LTR", ln=1, align="C", fill=True)
-    pdf.set_font(fonte_status, "B", 11)
-    pdf.cell(0, 9, status, border="LBR", ln=1, align="C", fill=True)
-    pdf.set_text_color(0, 0, 0)
+        verificacao = ": Nc,Sd > Nc,Rd - NÃO ATENDE AO DIMENSIONAMENTO"
+    _add_linha_rotulada(pdf, "Verificação", verificacao)
+    _add_linha_rotulada(
+        pdf,
+        "Limite de esbeltez",
+        f": {r.esbeltez_max:.2f} (limite {r.limite_esbeltez:.0f}) - "
+        + ("ATENDE AO LIMITE DE ESBELTEZ" if r.atende_esbeltez else "NÃO ATENDE AO LIMITE DE ESBELTEZ"),
+    )
+
+
+_SUBSCRITOS_SEM_GLIFO = str.maketrans({"₀": "0", "₁": "1", "₂": "2"})
+
+
+def _texto_equacao(texto: str, fonte_unicode: bool) -> str:
+    texto = texto.translate(_SUBSCRITOS_SEM_GLIFO)
+    return texto if fonte_unicode else _sanitizar_latin1(texto)
+
+
+def _altura_estimada(equations: tuple[str, ...]) -> float:
+    return 12 + sum(5 * (1 + len(e) // 100) if e else 3 for e in equations)
+
+
+def _add_memoria(pdf: FPDF, steps: tuple[CalculationStep, ...]) -> None:
+    pdf.add_page()
+    _add_secao(pdf, "MEMÓRIA DE CÁLCULO")
+    fonte_unicode = getattr(pdf, "_fonte_simbolos_disponivel", False)
+    fonte_equacao = _FONTE_SIMBOLOS if fonte_unicode else "Helvetica"
+
+    for step in steps:
+        if pdf.get_y() + _altura_estimada(step.equations) > pdf.h - pdf.b_margin:
+            pdf.add_page()
+        pdf.ln(2)
+        pdf.set_x(10)
+        pdf.set_fill_color(240, 243, 246)
+        pdf.set_text_color(20, 40, 100)
+        pdf.set_font("Helvetica", "B", 10)
+        pdf.cell(0, 7, _sanitizar_latin1(step.title), new_x="LMARGIN", new_y="NEXT", fill=True)
+        pdf.set_text_color(0, 0, 0)
+        pdf.ln(1)
+
+        for equation in step.equations:
+            pdf.set_x(14)
+            if equation in ("Mesa", "Alma"):
+                pdf.ln(2)
+                pdf.set_x(14)
+                pdf.set_font("Helvetica", "B", 9)
+                pdf.cell(0, 6, equation, new_x="LMARGIN", new_y="NEXT")
+            elif equation in ("Ocorre flambagem local", "Não ocorre flambagem local"):
+                ruim = equation.startswith("Ocorre")
+                pdf.set_font("Helvetica", "B", 9)
+                pdf.set_text_color(*((180, 35, 24) if ruim else (24, 121, 78)))
+                pdf.cell(0, 5, _sanitizar_latin1(equation), new_x="LMARGIN", new_y="NEXT")
+                pdf.set_text_color(0, 0, 0)
+            elif equation:
+                pdf.set_font(fonte_equacao, "", 9)
+                pdf.multi_cell(0, 5, _texto_equacao(equation, fonte_unicode))
+                pdf.ln(0.5)
+            else:
+                pdf.ln(3)
+
+        pdf.ln(2)
 
 
 def gerar_memorial_pdf(
@@ -441,20 +418,14 @@ def gerar_memorial_pdf(
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
 
-    familia_label = "Laminado" if profile.family == ProfileFamily.LAMINADO else "Soldado"
-    pdf.set_font("Helvetica", "B", 10)
-    pdf.cell(
-        0,
-        7,
-        f"Perfil: {profile.bitola} ({familia_label}) | Aço: {steel.designacao} (fy = {steel.fy_mpa:g} MPa)",
-        ln=1,
-    )
-
+    _add_dados_entrada(pdf, profile, steel, loads)
     _add_geometria(pdf, profile, result)
-    _add_estabilidade_global(pdf, result)
-    _add_limite_esbeltez(pdf, result)
-    _add_flambagem_local(pdf, profile, result)
     _add_resultado(pdf, result)
+    pdf.ln(4)
+    pdf.set_x(10)
+    pdf.set_font("Helvetica", "I", 8)
+    pdf.multi_cell(0, 4, _sanitizar_latin1(EXPLANATION_NOTE))
+    _add_memoria(pdf, build_calculation_steps(profile, steel, loads, result))
 
     bitola_segura = re.sub(r'[<>:"/\\|?*]', "_", profile.bitola).strip(" .")
     nome_arquivo = f"Memorial_Compressao_{bitola_segura}.pdf"

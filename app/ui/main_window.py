@@ -245,7 +245,6 @@ class MainWindow(QMainWindow):
 
         abas = QTabWidget()
         abas.setDocumentMode(True)
-        abas.tabBar().setFocusPolicy(Qt.NoFocus)
         projetos = _ProjectsTab(conn)
         projetos.setObjectName("projectsTab")
         detalhes = ProfileDetailsTab()

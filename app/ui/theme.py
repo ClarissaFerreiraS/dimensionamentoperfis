@@ -18,7 +18,7 @@ TEXT = "#1f2328"
 TEXT_MUTED = "#1f2328"
 TEXT_SECTION = "#1f2328"
 ACCENT = "#2563eb"
-SUCCESS = "#138a3d"
+SUCCESS = "#0f7a35"
 DANGER = "#d32f2f"
 
 
@@ -143,15 +143,20 @@ QPushButton {{
 }}
 QPushButton:hover {{ background: #f0f3f6; }}
 QPushButton:pressed {{ background: #e6ebf0; }}
+QPushButton:focus, QToolButton:focus {{ border: 2px solid {ACCENT}; }}
+QPushButton#primary:focus, QPushButton#success:focus {{ border: 2px solid {TEXT}; }}
+QPushButton:disabled {{ color: #59636e; background: #eaeef2; }}
+QTabBar::tab:focus {{ border-bottom: 3px solid {ACCENT}; background: #eaf2ff; }}
+QListWidget#projectList::item:focus {{ border: 2px solid {ACCENT}; }}
 QPushButton#primary {{
     background: {ACCENT}; border: 1px solid {ACCENT}; color: white;
     font-weight: 600; letter-spacing: 1px; padding: 9px;
 }}
-QPushButton#primary:hover {{ background: #3b82f6; }}
+QPushButton#primary:hover {{ background: #1d4ed8; }}
 QPushButton#success {{
     background: {SUCCESS}; border: 1px solid {SUCCESS}; color: white; font-weight: 600;
 }}
-QPushButton#success:hover {{ background: #2da44e; }}
+QPushButton#success:hover {{ background: #0b5f29; }}
 
 QToolButton {{
     background: transparent; border: 1px solid transparent; border-radius: 6px;
@@ -198,10 +203,11 @@ QPushButton#link {{
     background: transparent; border: none; color: {ACCENT}; padding: 2px 4px;
 }}
 QPushButton#link:hover {{ color: #1d4ed8; text-decoration: underline; }}
-QScrollArea#aboutScroll {{ background: transparent; }}
-QScrollArea#aboutScroll > QWidget > QWidget {{ background: transparent; }}
+QScrollArea#aboutScroll, QScrollArea#profileDetailsScroll {{ background: transparent; }}
+QScrollArea#aboutScroll > QWidget > QWidget,
+QScrollArea#profileDetailsScroll > QWidget > QWidget {{ background: transparent; }}
 QLabel#sectionTitle {{
-    color: {TEXT_MUTED}; font-size: 8pt; font-weight: 600; letter-spacing: 1px;
+    color: {TEXT_MUTED}; font-size: 9pt; font-weight: 600; letter-spacing: 1px;
     padding: 4px 6px; border-bottom: 1px solid {BORDER};
 }}
 QFrame#propRow {{ border-radius: 4px; }}

@@ -16,6 +16,7 @@ from PySide6.QtCore import QStandardPaths, Qt, Signal
 from PySide6.QtWidgets import (
     QComboBox,
     QDoubleSpinBox,
+    QDialog,
     QFormLayout,
     QFrame,
     QGridLayout,
@@ -27,11 +28,13 @@ from PySide6.QtWidgets import (
     QPushButton,
     QScrollArea,
     QSizePolicy,
+    QTextBrowser,
     QVBoxLayout,
     QWidget,
 )
 
 from app.domain.calculations import calcular_pilar
+from app.domain.calculation_explanation import EXPLANATION_NOTE, build_calculation_steps
 from app.domain.models import DesignResult, LoadCase, Profile, ProfileFamily, SteelType
 from app.report.pdf_report import gerar_memorial_pdf
 from app.repositories import ProfileRepository, ProjectRepository, SteelTypeRepository
@@ -123,7 +126,7 @@ class ProjectEditor(QWidget):
         self.nome_edit = QLineEdit()
         self.nome_edit.setPlaceholderText("Ex.: Pilar P1 — Térreo")
         self.autor_edit = QLineEdit()
-        self.autor_edit.setPlaceholderText("Responsável técnico")
+        self.autor_edit.setPlaceholderText("Nome do autor (opcional)")
         self.aco_combo = QComboBox()
         theme.configure_combo(self.aco_combo)
         self.aco_combo.currentIndexChanged.connect(self._on_aco_changed)
@@ -288,8 +291,13 @@ class ProjectEditor(QWidget):
         btn_pdf.setObjectName("success")
         btn_pdf.setCursor(Qt.PointingHandCursor)
         btn_pdf.clicked.connect(self.gerar_pdf)
+        btn_etapas = QPushButton("VER PASSO A PASSO")
+        btn_etapas.setCursor(Qt.PointingHandCursor)
+        btn_etapas.setToolTip("Abrir a explicação didática das etapas do cálculo")
+        btn_etapas.clicked.connect(self._mostrar_etapas_calculo)
         rodape = QHBoxLayout()
         rodape.addStretch(1)
+        rodape.addWidget(btn_etapas)
         rodape.addWidget(btn_pdf)
 
         box = QGroupBox("Resultado")
@@ -421,7 +429,7 @@ class ProjectEditor(QWidget):
     def load_project(self, project_id: int) -> None:
         row = self._project_repo.get(project_id)
         if row is None:
-            QMessageBox.warning(self, "Projeto não encontrado", "Este projeto pode ter sido excluído.")
+            QMessageBox.warning(self, "Projeto não encontrado", "Este projeto pode ter sido excluído. Um projeto novo foi aberto no lugar.")
             self.load_new()
             return
 
@@ -456,7 +464,11 @@ class ProjectEditor(QWidget):
         profile = self._current_profile()
         steel = self._current_steel()
         if profile is None or steel is None:
-            QMessageBox.warning(self, "Dados incompletos", "Selecione uma bitola e um tipo de aço válidos.")
+            QMessageBox.warning(
+                self,
+                "Dados incompletos",
+                "Escolha uma bitola e um tipo de aço nas listas antes de continuar.",
+            )
             return False
 
         loads = self._build_load_case()
@@ -511,16 +523,83 @@ class ProjectEditor(QWidget):
         self.r0_label.setText(f"{r.r0_cm:.2f} cm")
         self.resultado_label.adjustSize()
 
+    def _mostrar_etapas_calculo(self) -> None:
+        if self._current_result is None and not self._on_calcular():
+            return
+
+        profile = self._current_profile()
+        steel = self._current_steel()
+        result = self._current_result
+        if profile is None or steel is None or result is None:
+            return
+
+        passos = build_calculation_steps(profile, steel, self._build_load_case(), result)
+        partes = [
+            "<html><head><style>"
+            "body { font-family: Georgia, serif; }"
+            "h2 { font-family: Segoe UI, sans-serif; }"
+            "h3 { font-family: Segoe UI, sans-serif; margin: 14px 0 6px; }"
+            ".equation { margin: 5px 8px; line-height: 1.5; }"
+            ".element { font: 600 11pt Segoe UI, sans-serif; margin-top: 12px; }"
+            ".status { font: 600 10pt Segoe UI, sans-serif; margin: 4px 8px; }"
+            ".reference { color: #707782; font: 9pt Segoe UI, sans-serif; }"
+            "</style></head><body><h2>Passo a passo do cálculo</h2>"
+        ]
+        for passo in passos:
+            partes.append(f"<h3>{html.escape(passo.title)}</h3>")
+            for equation in passo.equations:
+                if not equation:
+                    partes.append("<div style='height: 12px;'></div>")
+                elif equation in ("Mesa", "Alma"):
+                    partes.append(
+                        f"<div class='element'>{html.escape(equation)}</div>"
+                    )
+                elif equation in (
+                    "Ocorre flambagem local",
+                    "Não ocorre flambagem local",
+                ):
+                    color = "#b42318" if equation.startswith("Ocorre") else "#18794e"
+                    partes.append(
+                        f"<div class='status' style='color:{color}'>"
+                        f"{html.escape(equation)}</div>"
+                    )
+                else:
+                    partes.append(
+                        f"<div class='equation'>{html.escape(equation)}</div>"
+                    )
+        partes.append(f"<p class='reference'>{html.escape(EXPLANATION_NOTE)}</p></body></html>")
+
+        dialogo = QDialog(self)
+        dialogo.setWindowTitle("Passo a passo do cálculo")
+        dialogo.resize(760, 620)
+        layout = QVBoxLayout(dialogo)
+        texto = QTextBrowser(dialogo)
+        texto.setHtml("".join(partes))
+        layout.addWidget(texto)
+        fechar = QPushButton("Fechar")
+        fechar.clicked.connect(dialogo.accept)
+        layout.addWidget(fechar)
+        dialogo.exec()
+
     def salvar(self) -> None:
         nome = self.nome_edit.text().strip()
         if not nome:
-            QMessageBox.warning(self, "Nome obrigatório", "Informe um nome para o projeto.")
+            QMessageBox.warning(
+                self,
+                "Nome obrigatório",
+                'Digite um nome para o projeto no campo "Nome" para poder salvar.',
+            )
+            self.nome_edit.setFocus()
             return
 
         profile = self._current_profile()
         steel = self._current_steel()
         if profile is None or steel is None:
-            QMessageBox.warning(self, "Dados incompletos", "Selecione uma bitola e um tipo de aço válidos.")
+            QMessageBox.warning(
+                self,
+                "Dados incompletos",
+                "Escolha uma bitola e um tipo de aço nas listas antes de continuar.",
+            )
             return
 
         loads = self._build_load_case()
@@ -560,7 +639,12 @@ class ProjectEditor(QWidget):
 
         pasta_downloads = QStandardPaths.writableLocation(QStandardPaths.DownloadLocation)
         if not pasta_downloads:
-            QMessageBox.critical(self, "Erro ao gerar PDF", "Não foi possível localizar a pasta Downloads.")
+            QMessageBox.critical(
+                self,
+                "Erro ao gerar PDF",
+                "Não foi possível localizar a pasta Downloads deste computador. "
+                "Verifique se ela existe e tente novamente.",
+            )
             return
 
         autor = self.autor_edit.text().strip() or None
@@ -574,7 +658,12 @@ class ProjectEditor(QWidget):
                 output_dir=pasta_downloads,
             )
         except Exception as exc:  # noqa: BLE001 — reportado ao usuário, não é fatal para o app
-            QMessageBox.critical(self, "Erro ao gerar PDF", str(exc))
+            QMessageBox.critical(
+                self,
+                "Erro ao gerar PDF",
+                "Não foi possível criar o arquivo. Feche o PDF se ele estiver aberto "
+                f"e tente novamente.\n\nDetalhe técnico: {exc}",
+            )
             return
 
         QMessageBox.information(self, "PDF gerado", f"Memorial salvo em:\n{caminho}")

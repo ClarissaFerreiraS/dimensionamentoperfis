@@ -185,7 +185,6 @@ class AboutTab(QWidget):
         self.start_button = QPushButton("Iniciar Projeto  →")
         self.start_button.setObjectName("primary")
         self.start_button.setCursor(Qt.PointingHandCursor)
-        self.start_button.setFocusPolicy(Qt.NoFocus)
         self.start_button.clicked.connect(self.start_requested)
         start_row.addWidget(self.start_button)
         layout.addLayout(start_row)

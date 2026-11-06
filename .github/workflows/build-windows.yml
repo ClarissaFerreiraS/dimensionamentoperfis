@@ -35,22 +35,22 @@ jobs:
         run: pyinstaller packaging/pyinstaller.spec --noconfirm
 
       - name: Incluir catálogo já populado no pacote
-        run: Copy-Item catalogo.db dist/Dimensionamento/catalogo.db
+        run: Copy-Item catalogo.db dist/StructDim/catalogo.db
 
       - name: Compactar
-        run: Compress-Archive -Path dist/Dimensionamento/* -DestinationPath Dimensionamento-Windows.zip
+        run: Compress-Archive -Path dist/StructDim/* -DestinationPath StructDim-Windows.zip
 
       - name: Publicar artefato (execução manual)
         if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
-          name: Dimensionamento-Windows
-          path: Dimensionamento-Windows.zip
+          name: StructDim-Windows
+          path: StructDim-Windows.zip
 
       - name: Publicar release (push de tag)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: Dimensionamento-Windows.zip
+          files: StructDim-Windows.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

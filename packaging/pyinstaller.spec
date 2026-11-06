@@ -48,12 +48,13 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name="Dimensionamento",
+    name="StructDim",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
     console=False,
+    icon=str(_ROOT / "app" / "ui" / "assets" / "structdim_icon.ico"),
 )
 
 coll = COLLECT(
@@ -63,5 +64,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name="Dimensionamento",
+    name="StructDim",
 )

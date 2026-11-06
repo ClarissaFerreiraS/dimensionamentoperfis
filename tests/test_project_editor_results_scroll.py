@@ -20,7 +20,7 @@ def test_project_results_can_scroll_on_short_windows():
 
     editor = window.findChild(QWidget, "projectsTab").editor
     tabs = window.centralWidget()
-    assert tabs.tabBar().focusPolicy() == Qt.NoFocus
+    assert tabs.tabBar().focusPolicy() != Qt.NoFocus
     result_scroll = editor.findChild(QScrollArea, "resultScroll")
     editor.resultado_label.setText(
         "<p>Resultado detalhado da verificação estrutural.</p>" * 80

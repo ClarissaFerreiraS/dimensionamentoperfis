@@ -1,31 +1,31 @@
-# Dimensionamento de Perfis Metálicos (Soldados e Laminados) - ABNT NBR 8800:2024
+# StructDim — Dimensionamento de Perfis de Aço
 
-Versão atual: **0.1.5**
+Versão atual: **0.1.3**
 
-Aplicativo desktop para o dimensionamento à compressão de perfis de aço,
-conforme a **ABNT NBR 8800:2024**.
+![Ícone do StructDim](app/ui/assets/structdim_icon.png)
 
-O projeto oferece uma interface gráfica para selecionar perfis laminados
-(W/HP) ou soldados (CS), definir o aço e as condições de flambagem, conferir
-o resultado e gerar um memorial de cálculo em PDF.
+O **StructDim** é um software de uso educacional para o estudo do
+dimensionamento à compressão de perfis de aço, com base nos critérios da
+**ABNT NBR 8800:2024**. Seu nome combina *Structure* (estrutura, em inglês) e
+dimensionamento, sintetizando o tema abordado pelo aplicativo.
 
-O desenvolvimento desta ferramenta permite automatizar os procedimentos de
-verificação de perfis metálicos submetidos à compressão e auxiliar na escolha
-de uma seção transversal adequada às condições consideradas. A aplicação pode
-ser útil, por exemplo, em situações de reforço estrutural que utilizem um
-perfil de aço e exijam a avaliação de uma seção compatível com os critérios de
-dimensionamento.
+Por meio de uma interface gráfica, estudantes podem selecionar perfis
+laminados (W/HP) ou soldados (CS), definir o tipo de aço e as condições de
+flambagem, acompanhar as verificações e gerar um memorial de cálculo em PDF.
+O aplicativo busca aproximar os conceitos estudados em sala de aula de sua
+aplicação em exemplos de dimensionamento.
 
-O projeto também responde à atualização da **ABNT NBR 8800**, publicada em
-2024, que trouxe mudanças nos procedimentos de dimensionamento de elementos
-de aço comprimidos em relação à versão anterior. Dessa forma, a ferramenta
-busca acompanhar os critérios da norma vigente e fornecer cálculos alinhados
-às exigências atualmente estabelecidas.
+Os critérios implementados consideram a edição de 2024 da **ABNT NBR 8800**.
+O uso do aplicativo é educacional: os resultados servem para estudo e não
+substituem a consulta à norma, a análise das hipóteses adotadas ou a validação
+dos cálculos em cada contexto.
 
 ## Recursos
 
 - Aba inicial apresenta o propósito educacional do StructDim e orienta o primeiro uso.
 - Dimensionamento de perfis de aço submetidos à compressão axial.
+- Explicação passo a passo dos resultados, com expressões implementadas e
+  referências temáticas à norma.
 - Catálogo de perfis **laminados (W/HP)** e **soldados (CS)**.
 - Catálogo de tipos de aço com propriedades `fy` e `fu`.
 - Cadastro, salvamento, duplicação e exclusão de projetos.
@@ -39,20 +39,26 @@ busca acompanhar os critérios da norma vigente e fornecer cálculos alinhados
 > geometria utilizados na interface. Alterações visuais na interface não
 > modificam as fórmulas nem o conteúdo técnico do cálculo.
 
-## PROA.lab
+O passo a passo e as expressões também são incluídos no memorial PDF para fins
+educacionais. Consulte a edição oficial da norma para confirmar a aplicação de
+cada equação.
 
-Este aplicativo está vinculado ao **PROA.lab — Laboratório de Programação e
-Análise de Estruturas**, uma iniciativa de extensão do **IFCE Campus
-Quixadá**. O projeto desenvolve e disponibiliza gratuitamente ferramentas
-computacionais para a Engenharia Civil, com foco em Estruturas.
+## O nome StructDim e o PROA.lab
 
-Além de apoiar profissionais na automatização de rotinas de análise e projeto,
-as ferramentas do PROA.lab aproximam acadêmicos da prática de engenharia,
-fortalecendo a relação entre os conceitos estudados e sua aplicação técnica.
-O nome remete à Programação e Análise de Estruturas e à proa de uma
-embarcação, simbolizando a iniciativa diante dos desafios da área. O sufixo
-`.lab` reforça a natureza computacional do projeto e sua visão de consolidar,
-no futuro, um espaço permanente de inovação e pesquisa aplicada.
+O StructDim foi desenvolvido no contexto do **PROA.lab — Laboratório de
+Programação e Análise de Estruturas**, projeto de extensão do **IFCE Campus
+Quixadá**. A iniciativa propõe desenvolver e disponibilizar gratuitamente
+ferramentas computacionais para a Engenharia Civil, especialmente para o
+estudo de Estruturas. Seus recursos têm finalidade educacional e buscam
+fortalecer a relação entre teoria e prática na formação acadêmica.
+
+O nome **PROA** reúne referência à Programação e Análise de Estruturas e à
+proa de uma embarcação, símbolo de avanço diante dos desafios da Engenharia.
+O sufixo **.lab**, inspirado nas extensões de arquivos digitais, destaca o
+caráter computacional da iniciativa. Além do desenvolvimento de software, o
+PROA.lab tem como perspectiva contribuir para a consolidação de uma cultura
+técnica e científica e, futuramente, de um espaço permanente de inovação e
+pesquisa aplicada no campus.
 
 ## Tecnologias
 
@@ -162,8 +168,8 @@ O projeto inclui uma especificação do PyInstaller em
 
 O workflow [`.github/workflows/build-windows.yml`](.github/workflows/build-windows.yml)
 gera o pacote Windows automaticamente quando uma tag no formato `vX.Y.Z` é
-enviada ao repositório. Um simples push na branch `master` **não** cria uma
-release.
+enviada ao repositório. O ZIP gerado contém o `StructDim.exe` com o nome e o
+ícone do aplicativo. Um simples push na branch `master` **não** cria uma release.
 
 ## Estrutura do projeto
 
@@ -193,8 +199,6 @@ duplicada entre a tela e o relatório.
 
 Os cálculos foram estruturados a partir dos scripts históricos
 `Codigocompleto.py` e `CodigocomPDF.py`, mantidos no repositório como
-referência, e da planilha `ELU Compressão.xlsx`.
-
-Este software é uma ferramenta de apoio ao dimensionamento. A validação final
-do projeto e a responsabilidade técnica permanecem com o profissional
-habilitado.
+referência, e da planilha `ELU Compressão.xlsx`. O StructDim é destinado ao
+estudo; seus resultados devem ser interpretados considerando os dados de
+entrada, as hipóteses adotadas e os limites dos critérios implementados.

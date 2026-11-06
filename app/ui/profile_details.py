@@ -45,6 +45,7 @@ class ProfileDetailsTab(QWidget):
         rolagem = QScrollArea()
         rolagem.setWidgetResizable(True)
         rolagem.setFrameShape(QScrollArea.NoFrame)
+        rolagem.setObjectName("profileDetailsScroll")
         rolagem.setWidget(dados)
         dados_box = QGroupBox("Dados do perfil")
         dados_box_layout = QVBoxLayout(dados_box)
