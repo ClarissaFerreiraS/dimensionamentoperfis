@@ -43,6 +43,37 @@ O passo a passo e as expressões também são incluídos no memorial PDF para fi
 educacionais. Consulte a edição oficial da norma para confirmar a aplicação de
 cada equação.
 
+## Script de terminal de referência
+
+Além do aplicativo gráfico, o repositório mantém
+[`CodigocomPDF.py`](CodigocomPDF.py), um script independente de linha de
+comando, derivado da implementação histórica do dimensionamento. Ele não abre
+o StructDim nem usa o catálogo SQLite: lê diretamente a planilha
+`ELU Compressão.xlsx`, que deve estar na pasta de execução.
+
+Com o ambiente virtual ativado e as dependências do projeto instaladas, instale
+também as dependências específicas do script:
+
+```bash
+python -m pip install pandas pick
+```
+
+Execute o script a partir da raiz do repositório:
+
+```bash
+python CodigocomPDF.py
+```
+
+O fluxo interativo solicita o nome do responsável pelo memorial, a família e a
+bitola do perfil, o tipo de aço e os dados de cálculo. Informe `Ea` e `Ga` em
+GPa, a força axial em kN, os comprimentos destravados em metros e os fatores
+`Kx`, `Ky` e `Kz` conforme as condições de flambagem. Ao final, o memorial PDF
+é salvo na pasta de execução com o nome `Memorial_Compressao_<perfil>.pdf`.
+
+Esse script é mantido para referência e execução independente; não é o ponto de
+entrada do aplicativo gráfico. Para usar a interface, siga as instruções de
+[execução do aplicativo](#executando-o-aplicativo).
+
 ## O nome StructDim e o PROA.lab
 
 O StructDim foi desenvolvido no contexto do **PROA.lab — Laboratório de
