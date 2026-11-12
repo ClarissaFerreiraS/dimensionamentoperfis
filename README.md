@@ -33,6 +33,8 @@ dos cálculos em cada contexto.
 - Destaque interativo das cotas ao passar o mouse sobre as dimensões.
 - Consulta de propriedades geométricas e ordenação numérica das bitolas.
 - Geração automática do memorial de cálculo em PDF na pasta **Downloads**.
+- Ao gerar outro memorial para a mesma bitola, um sufixo numérico é acrescentado
+  ao nome do arquivo para preservar os PDFs anteriores.
 - Interface em português, com tema claro.
 
 > O memorial de cálculo é gerado a partir dos mesmos dados e da mesma

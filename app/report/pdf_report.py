@@ -2,7 +2,8 @@
 
 Mantém os títulos de seção e a redação em português do script original
 ("1. ESTABILIDADE GLOBAL", "2. VERIFICAÇÃO DO LIMITE DE ESBELTEZ", etc.) e a
-convenção de nome de arquivo ``Memorial_Compressao_<bitola>.pdf``, mas:
+convenção de nome de arquivo ``Memorial_Compressao_<bitola>.pdf``, com sufixos
+numéricos para evitar sobrescrever relatórios existentes, mas:
 
 - Lê os valores de :class:`~app.domain.models.DesignResult` em vez de
   variáveis soltas calculadas inline no script.
@@ -411,8 +412,8 @@ def gerar_memorial_pdf(
 ) -> Path:
     """Gera o memorial de cálculo e retorna o caminho do PDF salvo.
 
-    Nome de arquivo: ``Memorial_Compressao_<bitola>.pdf`` (mesma convenção de
-    ``CodigocomPDF.py``, com ``/`` trocado por ``_`` na bitola).
+    Usa ``Memorial_Compressao_<bitola>.pdf`` e acrescenta um sufixo numérico
+    quando o nome já existe, sem sobrescrever arquivos anteriores.
     """
 
     autor_sanitizado = _sanitizar_latin1(autor.strip()) if autor and autor.strip() else _AUTOR_PADRAO
@@ -430,7 +431,17 @@ def gerar_memorial_pdf(
     _add_memoria(pdf, build_calculation_steps(profile, steel, loads, result))
 
     bitola_segura = re.sub(r'[<>:"/\\|?*]', "_", profile.bitola).strip(" .")
-    nome_arquivo = f"Memorial_Compressao_{bitola_segura}.pdf"
-    caminho = Path(output_dir) / nome_arquivo
-    pdf.output(str(caminho))
-    return caminho
+    nome_base = f"Memorial_Compressao_{bitola_segura}"
+    conteudo = pdf.output()
+    indice = 0
+    while True:
+        sufixo = f" ({indice})" if indice else ""
+        caminho = Path(output_dir) / f"{nome_base}{sufixo}.pdf"
+        try:
+            arquivo = caminho.open("xb")
+        except FileExistsError:
+            indice += 1
+            continue
+        with arquivo:
+            arquivo.write(conteudo)
+        return caminho
