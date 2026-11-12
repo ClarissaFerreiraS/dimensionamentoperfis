@@ -1,6 +1,6 @@
 # StructDim — Dimensionamento de Perfis de Aço
 
-Versão atual: **0.1.6**
+Versão atual: **0.1.4**
 
 ![Ícone do StructDim](app/ui/assets/structdim_icon.png)
 
@@ -45,7 +45,7 @@ O passo a passo e as expressões também são incluídos no memorial PDF para fi
 educacionais. Consulte a edição oficial da norma para confirmar a aplicação de
 cada equação.
 
-### Novidades da versão 0.1.6
+### Novidades
 
 - O índice de esbeltez reduzido (λ₀) aparece antes do fator de redução (χ)
   nos resultados e no memorial PDF, conforme o passo a passo.
