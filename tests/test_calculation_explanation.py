@@ -21,6 +21,8 @@ def test_explanation_uses_calculated_values_and_norm_reference():
     assert "λx = Kx·Lx·100/rx = 1·1·100/11.77 = 8.50" in steps[0].equations[0]
     assert "Nₑ = mín(" in steps[1].equations[-1]
     assert "= 1934.44 kN" in steps[1].equations[-1]
+    assert steps[2].equations[0].startswith("λ₀ =")
+    assert steps[2].equations[0].endswith(f"= {result.lambda0:.4f}")
     assert "χ = 0.658^(λ₀²) = 0.8162" in steps[2].equations[1]
     assert steps[3].equations[0] == "Mesa"
     assert steps[3].equations[1] == "Não ocorre flambagem local"
@@ -37,6 +39,22 @@ def test_explanation_uses_calculated_values_and_norm_reference():
     assert "= 626.76 kN" in steps[5].equations[0]
     assert not any("η =" in equation for equation in steps[5].equations)
     assert "fins educacionais" in EXPLANATION_NOTE
+
+
+def test_result_summary_shows_lambda_before_chi():
+    app = QApplication.instance() or QApplication([])
+    connection = open_database(":memory:")
+    editor = ProjectEditor(connection)
+    result = calcular_pilar(PERFIL_W310X21, ACO_A572_GR50, CARREGAMENTO)
+
+    editor._atualizar_resultado(PERFIL_W310X21, ACO_A572_GR50, result)
+
+    assert (
+        f"λ₀ / χ: <b>{result.lambda0:.4f} / {result.chi:.4f}</b>"
+        in editor.resultado_label.text()
+    )
+    editor.close()
+    connection.close()
 
 
 def test_explanation_uses_welded_web_slenderness():
@@ -59,11 +77,13 @@ def test_ui_step_by_step_dialog_shows_calculated_values(monkeypatch):
     monkeypatch.setattr(editor, "_current_steel", lambda: ACO_A572_GR50)
     monkeypatch.setattr(editor, "_build_load_case", lambda: CARREGAMENTO)
     dialog_html: list[str] = []
+    dialog_text: list[str] = []
 
     def capture_dialog(dialog: QDialog) -> int:
         browser = dialog.findChild(QTextBrowser)
         assert browser is not None
         dialog_html.append(browser.toHtml())
+        dialog_text.append(browser.toPlainText())
         return 0
 
     monkeypatch.setattr(QDialog, "exec", capture_dialog)
@@ -74,6 +94,9 @@ def test_ui_step_by_step_dialog_shows_calculated_values(monkeypatch):
     assert "ABNT NBR 8800" not in dialog_html[0]
     assert "Mesa" in dialog_html[0]
     assert "Alma" in dialog_html[0]
+    assert dialog_text[0].index(f"= {result.lambda0:.4f}") < dialog_text[0].index(
+        f"= {result.chi:.4f}"
+    )
     app.processEvents()
     editor.close()
     connection.close()

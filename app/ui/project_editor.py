@@ -501,7 +501,7 @@ class ProjectEditor(QWidget):
             f"<td>Ne,min: <b>{r.ne_min_kn:.2f} kN</b></td></tr>"
             "</table>"
             f"<p style='color:{section_color}; margin: 10px 0 3px 0; font-weight: 600;'>Índice de Esbeltez e fator de redução</p>"
-            f"<div>χ / λ₀: <b>{r.chi:.4f} / {r.lambda0:.4f}</b></div>"
+            f"<div>λ₀ / χ: <b>{r.lambda0:.4f} / {r.chi:.4f}</b></div>"
             f"<p style='color:{section_color}; margin: 10px 0 3px 0; font-weight: 600;'>Flambagem Local</p>"
             f"<div>Mesa: {'ocorre flambagem' if r.ocorre_flamb_mesa else 'não ocorre flambagem'}</div>"
             f"<div>Alma: {'ocorre flambagem' if r.ocorre_flamb_alma else 'não ocorre flambagem'}</div>"

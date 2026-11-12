@@ -1,6 +1,12 @@
 from __future__ import annotations
 
-from PySide6.QtWidgets import QApplication, QFrame, QLabel, QPushButton, QTabWidget
+from PySide6.QtWidgets import (
+    QApplication,
+    QFrame,
+    QLabel,
+    QPushButton,
+    QTabWidget,
+)
 
 from app import __version__
 from app.db.database import open_database
@@ -20,6 +26,7 @@ def test_about_tab_is_first_and_has_only_the_notice():
     )
     assert __version__ not in window.windowTitle()
     assert not window.windowIcon().isNull()
+    assert "QPushButton:focus, QToolButton:focus" not in app.styleSheet()
     assert isinstance(tabs, QTabWidget)
     assert tabs.tabText(0) == "Conheça o StructDim"
     assert tabs.tabText(1) == "Projetos"

@@ -328,7 +328,7 @@ def _add_dados_entrada(pdf: FPDF, profile: Profile, steel: SteelType, loads: Loa
 
 
 def _add_resultado(pdf: FPDF, r: DesignResult) -> None:
-    if pdf.get_y() > pdf.h - pdf.b_margin - 30:
+    if pdf.get_y() > pdf.h - pdf.b_margin - 45:
         pdf.add_page()
     _add_secao(pdf, "RESULTADO FINAL")
     _add_linha_rotulada(pdf, "Esforço resistente (Nc,Rd)", f": {r.nc_rd_kn:.2f} kN")
@@ -344,6 +344,8 @@ def _add_resultado(pdf: FPDF, r: DesignResult) -> None:
         f": {r.esbeltez_max:.2f} (limite {r.limite_esbeltez:.0f}) - "
         + ("ATENDE AO LIMITE DE ESBELTEZ" if r.atende_esbeltez else "NÃO ATENDE AO LIMITE DE ESBELTEZ"),
     )
+    rotulo = "λ0 / χ" if getattr(pdf, "_fonte_simbolos_disponivel", False) else "lambda0 / chi"
+    _add_linha_rotulada(pdf, rotulo, f": {r.lambda0:.4f} / {r.chi:.4f}")
 
 
 _SUBSCRITOS_SEM_GLIFO = str.maketrans({"₀": "0", "₁": "1", "₂": "2"})

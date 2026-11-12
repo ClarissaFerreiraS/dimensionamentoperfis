@@ -143,7 +143,7 @@ QPushButton {{
 }}
 QPushButton:hover {{ background: #f0f3f6; }}
 QPushButton:pressed {{ background: #e6ebf0; }}
-QPushButton:focus, QToolButton:focus {{ border: 2px solid {ACCENT}; }}
+QPushButton:focus {{ border: 2px solid {ACCENT}; }}
 QPushButton#primary:focus, QPushButton#success:focus {{ border: 2px solid {TEXT}; }}
 QPushButton:disabled {{ color: #59636e; background: #eaeef2; }}
 QTabBar::tab:focus {{ border-bottom: 3px solid {ACCENT}; background: #eaf2ff; }}
