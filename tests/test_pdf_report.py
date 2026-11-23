@@ -2,14 +2,17 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+import pytest
+
 from app.report import pdf_report
 from app.domain.calculations import calcular_pilar
 from app.report.pdf_report import gerar_memorial_pdf
-from tests.test_calculations import ACO_A572_GR50, CARREGAMENTO, PERFIL_W310X21
+from tests.test_calculations import ACO_A572_GR50, CASOS_DE_CALCULO
 
 
-def test_pdf_result_summary_shows_lambda_before_chi(monkeypatch):
-    result = calcular_pilar(PERFIL_W310X21, ACO_A572_GR50, CARREGAMENTO)
+@pytest.mark.parametrize(("perfil", "carregamento"), CASOS_DE_CALCULO)
+def test_pdf_result_summary_shows_lambda_before_chi(monkeypatch, perfil, carregamento):
+    result = calcular_pilar(perfil, ACO_A572_GR50, carregamento)
     lines = []
 
     monkeypatch.setattr(pdf_report, "_add_secao", lambda *_args: None)
@@ -37,12 +40,13 @@ def test_pdf_result_summary_shows_lambda_before_chi(monkeypatch):
     assert ("lambda0 / chi", f": {result.lambda0:.4f} / {result.chi:.4f}") in lines
 
 
-def test_memorial_pdf_includes_structdim_logo(tmp_path):
-    result = calcular_pilar(PERFIL_W310X21, ACO_A572_GR50, CARREGAMENTO)
+@pytest.mark.parametrize(("perfil", "carregamento"), CASOS_DE_CALCULO)
+def test_memorial_pdf_includes_structdim_logo(tmp_path, perfil, carregamento):
+    result = calcular_pilar(perfil, ACO_A572_GR50, carregamento)
     pdf_path = gerar_memorial_pdf(
-        PERFIL_W310X21,
+        perfil,
         ACO_A572_GR50,
-        CARREGAMENTO,
+        carregamento,
         result,
         output_dir=tmp_path,
     )
@@ -51,25 +55,27 @@ def test_memorial_pdf_includes_structdim_logo(tmp_path):
     assert b"/Subtype /Image" in pdf_path.read_bytes()
 
 
-def test_memoriais_da_mesma_bitola_nao_sobrescrevem_arquivos(tmp_path):
-    result = calcular_pilar(PERFIL_W310X21, ACO_A572_GR50, CARREGAMENTO)
+@pytest.mark.parametrize(("perfil", "carregamento"), CASOS_DE_CALCULO)
+def test_memoriais_da_mesma_bitola_nao_sobrescrevem_arquivos(tmp_path, perfil, carregamento):
+    result = calcular_pilar(perfil, ACO_A572_GR50, carregamento)
     primeiro = gerar_memorial_pdf(
-        PERFIL_W310X21, ACO_A572_GR50, CARREGAMENTO, result, output_dir=tmp_path
+        perfil, ACO_A572_GR50, carregamento, result, output_dir=tmp_path
     )
     conteudo_original = primeiro.read_bytes()
-    outras_cargas = replace(CARREGAMENTO, ncsd_kn=100)
-    outro_resultado = calcular_pilar(PERFIL_W310X21, ACO_A572_GR50, outras_cargas)
+    outras_cargas = replace(carregamento, ncsd_kn=100)
+    outro_resultado = calcular_pilar(perfil, ACO_A572_GR50, outras_cargas)
 
     segundo = gerar_memorial_pdf(
-        PERFIL_W310X21, ACO_A572_GR50, outras_cargas, outro_resultado, output_dir=tmp_path
+        perfil, ACO_A572_GR50, outras_cargas, outro_resultado, output_dir=tmp_path
     )
     terceiro = gerar_memorial_pdf(
-        PERFIL_W310X21, ACO_A572_GR50, outras_cargas, outro_resultado, output_dir=tmp_path
+        perfil, ACO_A572_GR50, outras_cargas, outro_resultado, output_dir=tmp_path
     )
 
-    assert primeiro.name == "Memorial_Compressao_W 310 x 21.0.pdf"
-    assert segundo.name == "Memorial_Compressao_W 310 x 21.0 (1).pdf"
-    assert terceiro.name == "Memorial_Compressao_W 310 x 21.0 (2).pdf"
+    nome_base = f"Memorial_Compressao_{perfil.bitola}"
+    assert primeiro.name == f"{nome_base}.pdf"
+    assert segundo.name == f"{nome_base} (1).pdf"
+    assert terceiro.name == f"{nome_base} (2).pdf"
     assert primeiro.read_bytes() == conteudo_original
     assert segundo.read_bytes().startswith(b"%PDF-")
     assert segundo.read_bytes() != conteudo_original
