@@ -1,6 +1,6 @@
 # StructDim — Dimensionamento de Perfis de Aço
 
-Versão atual: **0.1.4**
+Versão atual: **0.1.7**
 
 ![Ícone do StructDim](app/ui/assets/structdim_icon.png)
 
@@ -207,8 +207,10 @@ O projeto inclui uma especificação do PyInstaller em
 
 O workflow [`.github/workflows/build-windows.yml`](.github/workflows/build-windows.yml)
 gera o pacote Windows automaticamente quando uma tag no formato `vX.Y.Z` é
-enviada ao repositório. O ZIP gerado contém o `StructDim.exe` com o nome e o
-ícone do aplicativo. Um simples push na branch `master` **não** cria uma release.
+enviada ao repositório. A tag deve corresponder à versão em `app/__init__.py`:
+por exemplo, `v0.1.7` gera `StructDim-v0.1.7.zip`. O ZIP para Windows contém o
+`StructDim.exe`, o catálogo e os arquivos necessários para executar a aplicação.
+Um simples push na branch `master` **não** cria uma release.
 
 ## Estrutura do projeto
 

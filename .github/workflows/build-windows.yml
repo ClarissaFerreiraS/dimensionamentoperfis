@@ -28,6 +28,18 @@ jobs:
       - name: Testar interface e cálculos
         run: python -m pytest -q
 
+      - name: Verificar versão
+        run: |
+          $version = python -c "from app import __version__; print(__version__)"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($version -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$') {
+            throw "Versão inválida: $version"
+          }
+          if ($env:GITHUB_REF_TYPE -eq "tag" -and $env:GITHUB_REF_NAME -ne "v$version") {
+            throw "A tag $env:GITHUB_REF_NAME não corresponde à versão v$version."
+          }
+          "PACKAGE_NAME=StructDim-v$version" >> $env:GITHUB_ENV
+
       - name: Popular catálogo a partir da planilha
         run: python -m app.importers.excel_importer "ELU Compressão.xlsx" catalogo.db
 
@@ -38,19 +50,20 @@ jobs:
         run: Copy-Item catalogo.db dist/StructDim/catalogo.db
 
       - name: Compactar
-        run: Compress-Archive -Path dist/StructDim/* -DestinationPath StructDim-Windows.zip
+        run: Compress-Archive -Path dist/StructDim/* -DestinationPath "$env:PACKAGE_NAME.zip"
 
       - name: Publicar artefato (execução manual)
         if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
-          name: StructDim-Windows
-          path: StructDim-Windows.zip
+          name: ${{ env.PACKAGE_NAME }}
+          path: ${{ env.PACKAGE_NAME }}.zip
 
       - name: Publicar release (push de tag)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: StructDim-Windows.zip
+          body: "Aplicativo StructDim para Windows. Extraia todos os arquivos do ZIP antes de executar StructDim.exe."
+          files: ${{ env.PACKAGE_NAME }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
