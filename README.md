@@ -119,8 +119,8 @@ pesquisa aplicada no campus.
 Clone o repositório e entre na pasta do projeto:
 
 ```bash
-git clone https://github.com/SilasLLopes/dimensionamento.git
-cd dimensionamento
+git clone https://github.com/ClarissaFerreiraS/dimensionamentoperfis.git
+cd dimensionamentoperfis
 ```
 
 Crie e ative um ambiente virtual.
